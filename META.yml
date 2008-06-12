@@ -1,0 +1,27 @@
+---
+name: CPAN-Testers-ParseReport
+version: 0.0.1
+author:
+  - 'Andreas Koenig <andreas.koenig.7os6VVqR@franz.ak.mind.de>'
+abstract: parse reports to cpantesters.perl.org from various sources
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  DateTime::Format::Strptime: 0
+  File::Path: 0
+  Getopt::Long: 0
+  HTML::TreeBuilder: 0
+  LWP::UserAgent: 0
+  XML::LibXML: 0
+  XML::LibXML::XPathContext: 0
+build_requires:
+  Test::More: 0
+provides:
+  CPAN::Testers::ParseReport:
+    file: lib/CPAN/Testers/ParseReport.pm
+    version: 0.0.1
+generated_by: Module::Build version 0.2808
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
