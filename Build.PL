@@ -19,6 +19,8 @@ my $builder = Module::Build->new
       'Getopt::Long'               => 0,
       'LWP::UserAgent'             => 0,
       'HTML::TreeBuilder'          => 0,
+      'IO::Prompt'                 => 0,
+      'Pod::Usage'                 => 0,
       'XML::LibXML'                => 0,
       'XML::LibXML::XPathContext'  => 0,
      },
