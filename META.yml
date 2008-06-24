@@ -1,6 +1,6 @@
 ---
 name: CPAN-Testers-ParseReport
-version: 0.0.2
+version: 0.0.3
 author:
   - 'Andreas Koenig <andreas.koenig.7os6VVqR@franz.ak.mind.de>'
 abstract: parse reports to cpantesters.perl.org from various sources
@@ -22,7 +22,7 @@ build_requires:
 provides:
   CPAN::Testers::ParseReport:
     file: lib/CPAN/Testers/ParseReport.pm
-    version: 0.0.2
+    version: 0.0.3
 generated_by: Module::Build version 0.280801
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

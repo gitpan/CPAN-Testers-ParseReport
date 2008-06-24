@@ -18,7 +18,8 @@ WriteMakefile
                          },
           'INSTALLDIRS' => 'site',
           'EXE_FILES' => [
-                           'bin/ctgetreports'
+                           'bin/ctgetreports',
+                           'bin/ctgetreports~'
                          ],
           'PL_FILES' => {}
         )
