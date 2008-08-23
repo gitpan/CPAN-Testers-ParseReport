@@ -13,23 +13,28 @@ use XML::LibXML::XPathContext;
 
 our $Signal = 0;
 
+=encoding utf-8
+
 =head1 NAME
 
 CPAN::Testers::ParseReport - parse reports to cpantesters.perl.org from various sources
 
+=cut
+
+my($version_eval) = <<'=cut' =~ /((?m:^use.*))/;
+
 =head1 VERSION
 
-Version 0.0.4
+use version; our $VERSION = qv('0.0.5');
 
 =cut
 
-use version; our $VERSION = qv('0.0.4');
-
+eval $version_eval; die $@ if $@;
 
 =head1 SYNOPSIS
 
-Nothing in here is meant for public consumption. Use C<ctgetreports>
-from the commandline.
+The documentation in here is normally not needed because the code is
+meant to be run from a standalone program, L<ctgetreports>.
 
   ctgetreports --q mod:Moose Devel-Events
 
@@ -37,11 +42,11 @@ from the commandline.
 
 This is the core module for CPAN::Testers::ParseReport. If you're not
 looking to extend or alter the behaviour of this module, you probably
-want to look at C<ctgetreports> instead.
+want to look at L<ctgetreports> instead.
 
 =head1 OPTIONS
 
-Are described in the <ctgetreports> manpage and are passed through to
+Are described in the L<ctgetreports> manpage and are passed through to
 the functions unaltered.
 
 =head1 FUNCTIONS
@@ -156,6 +161,7 @@ sub _parse_yaml {
     require YAML::Syck;
     my $arr = YAML::Syck::LoadFile($ctarget);
     my($selected_release_ul,$selected_release_distrov,$excuse_string);
+    $DB::singl++;
     if ($Opt{vdistro}) {
         $excuse_string = "selected distro '$Opt{vdistro}'";
         $arr = [grep {$_->{distversion} eq $Opt{vdistro}} @$arr];
@@ -225,15 +231,17 @@ sub parse_distro {
     mkpath $cts_dir;
     my $ctarget = _download_overview($cts_dir, $distro, %Opt);
     my $reports;
+    # $DB::single++;
     $Opt{ctformat} ||= "html";
     if ($Opt{ctformat} eq "html") {
-        $reports = _parse_html($ctarget);
+        $reports = _parse_html($ctarget,%Opt);
     } else {
-        $reports = _parse_yaml($ctarget);
+        $reports = _parse_yaml($ctarget,%Opt);
     }
     return unless $reports;
     for my $report (@$reports) {
         _parse_single_report($report, \%dumpvars, %Opt);
+        last if $Signal;
     }
     if ($Opt{dumpvars}) {
         print YAML::Syck::Dump(\%dumpvars);
@@ -354,6 +362,7 @@ sub parse_report {
             if (/^\s*$/ || m|</pre>|) {
                 $in_summary = 0;
             } else {
+                s/&quot;/"/g;
                 my(%kv) = /\G,?\s*([^=]+)=('[^']+?'|\S+)/gc;
                 while (my($k,$v) = each %kv) {
                     my $ck = "conf:$k";
@@ -480,7 +489,7 @@ sub parse_report {
         local $ARGV;
         my $ans = IO::Prompt::prompt
             (
-             -p => "View $id? ",
+             -p => "View $id? [onechar: ynq] ",
              -d => "y",
              -u => qr/[ynq]/,
              -onechar,
@@ -503,19 +512,15 @@ sub parse_report {
 
 =head1 AUTHOR
 
-Andreas Koenig, C<< <andreas.koenig.7os6VVqR at franz.ak.mind.de> >>
+Andreas König
 
 =head1 BUGS
 
-Please report any bugs or feature requests to
-C<bug-cpan-testers-parsereport at rt.cpan.org>, or through the web
+Please report any bugs or feature requests through the web
 interface at
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=CPAN-Testers-ParseReport>.
 I will be notified, and then you'll automatically be notified of
 progress on your bug as I make changes.
-
-
-
 
 =head1 SUPPORT
 
@@ -549,10 +554,11 @@ L<http://search.cpan.org/dist/CPAN-Testers-ParseReport>
 
 =head1 ACKNOWLEDGEMENTS
 
+Thanks to RJBS for module-starter.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008 Andreas Koenig, all rights reserved.
+Copyright 2008 Andreas König.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
