@@ -25,7 +25,7 @@ my($version_eval) = <<'=cut' =~ /((?m:^use.*))/;
 
 =head1 VERSION
 
-use version; our $VERSION = qv('0.0.5');
+use version; our $VERSION = qv('0.0.6');
 
 =cut
 
@@ -125,7 +125,6 @@ sub _parse_html {
     my $xc = XML::LibXML::XPathContext->new($doc);
     my $nsu = $doc->documentElement->namespaceURI;
     $xc->registerNs('x', $nsu) if $nsu;
-    # $DB::single++;
     my($selected_release_ul,$selected_release_distrov,$excuse_string);
     if ($Opt{vdistro}) {
         $excuse_string = "selected distro '$Opt{vdistro}'";
@@ -161,7 +160,6 @@ sub _parse_yaml {
     require YAML::Syck;
     my $arr = YAML::Syck::LoadFile($ctarget);
     my($selected_release_ul,$selected_release_distrov,$excuse_string);
-    $DB::singl++;
     if ($Opt{vdistro}) {
         $excuse_string = "selected distro '$Opt{vdistro}'";
         $arr = [grep {$_->{distversion} eq $Opt{vdistro}} @$arr];
@@ -231,7 +229,6 @@ sub parse_distro {
     mkpath $cts_dir;
     my $ctarget = _download_overview($cts_dir, $distro, %Opt);
     my $reports;
-    # $DB::single++;
     $Opt{ctformat} ||= "html";
     if ($Opt{ctformat} eq "html") {
         $reports = _parse_html($ctarget,%Opt);
@@ -259,7 +256,7 @@ sub parse_report {
     my($target,$dumpvars,%Opt) = @_;
     our @q;
     my $id = basename($target);
-    my $ok;
+    my($ok,$about);
     open my $fh, $target or die;
     my(%extract);
     my $report_writer;
@@ -274,8 +271,13 @@ sub parse_report {
     my $current_headline;
     my @previous_line = ""; # so we can neutralize line breaks
   LINE: while (<$fh>) {
-        next unless /<title>(\S+)/;
+        next unless /<title>(\S+)\s+(\S+)/;
         $ok = $1;
+        $about = $2;
+        %extract = (
+                    "meta:ok" => $ok,
+                    "meta:about"=> $about,
+                   );
         last;
     }
     seek $fh, 0, 0;
@@ -372,7 +374,6 @@ sub parse_report {
                     }
                     $v =~ s/^\s+//;
                     $v =~ s/\s+$//;
-                    # $DB::single = $ck eq "conf:archname";
                     if ($qr && $ck =~ $qr) {
                         $dumpvars->{$ck}{$v}{$ok}++;
                     }

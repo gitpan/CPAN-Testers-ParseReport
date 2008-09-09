@@ -1,25 +1,29 @@
 --- #YAML:1.0
-name:                CPAN-Testers-ParseReport
-version:             0.0.5
-abstract:            ~
-license:             ~
-author:              ~
-generated_by:        ExtUtils::MakeMaker version 6.44
-distribution_type:   module
-requires:     
-    DateTime::Format::Strptime:    0
-    File::Path:                    0
-    Getopt::Long:                  0
-    HTML::TreeBuilder:             0
-    IO::Prompt:                    0
-    LWP::UserAgent:                0
-    Pod::Usage:                    0
-    Test::More:                    0
-    Test::Pod:                     0
-    XML::LibXML:                   0
-    XML::LibXML::XPathContext:     0
+name:               CPAN-Testers-ParseReport
+version:            0.0.6
+abstract:           ~
+author:  []
+license:            unknown
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    DateTime::Format::Strptime:  0
+    File::Path:           0
+    Getopt::Long:         0
+    HTML::TreeBuilder:    0
+    IO::Prompt:           0
+    LWP::UserAgent:       0
+    Pod::Usage:           0
+    Test::More:           0
+    Test::Pod:            0
+    XML::LibXML:          0
+    XML::LibXML::XPathContext:  0
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.45_02
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
-# write: git push git+ssh://repo.or.cz/srv/git/cpan-testers-parsereport.git master
-repository: "git://repo.or.cz/cpan-testers-parsereport.git"
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
