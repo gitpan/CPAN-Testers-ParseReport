@@ -25,7 +25,7 @@ my($version_eval) = <<'=cut' =~ /((?m:^use.*))/;
 
 =head1 VERSION
 
-use version; our $VERSION = qv('0.0.9');
+use version; our $VERSION = qv('0.0.10');
 
 =cut
 
@@ -79,7 +79,7 @@ $dumpvar is a hashreference that gets filled with data.
 
 sub _download_overview {
     my($cts_dir, $distro, %Opt) = @_;
-    my $format = $Opt{ctformat} || "html";
+    my $format = $Opt{ctformat} ||= "yaml";
     my $ctarget = "$cts_dir/$distro.$format";
     my $cheaders = "$cts_dir/$distro.headers";
     if (! -e $ctarget or (!$Opt{local} && -M $ctarget > .25)) {
@@ -195,14 +195,13 @@ sub _parse_yaml {
         return;
     }
     print "SELECTED: $selected_release_distrov\n";
-    my($ok,$id);
     my @all;
     for my $test (@$arr) {
-        $ok = $test->{action};
-        $id = $test->{id};
+        my $id = $test->{id};
         push @all, {id=>$id};
         return if $Signal;
     }
+    @all = sort { $b->{id} <=> $a->{id} } @all;
     return \@all;
 }
 
@@ -243,7 +242,7 @@ sub parse_distro {
     mkpath $cts_dir;
     my $ctarget = _download_overview($cts_dir, $distro, %Opt);
     my $reports;
-    $Opt{ctformat} ||= "html";
+    $Opt{ctformat} ||= "yaml";
     if ($Opt{ctformat} eq "html") {
         $reports = _parse_html($ctarget,%Opt);
     } else {
@@ -284,8 +283,18 @@ sub parse_report {
         for my $qr (@qr) {
             my $cqr = eval "qr{$qr}";
             die "Could not compile regular expression '$qr': $@" if $@;
-            my $matches = $report =~ $cqr;
-            $extract{"qr:$qr"} = $matches ? 1 : 0;
+            my(@matches) = $report =~ $cqr;
+            my $v;
+            if (@matches) {
+                if (@matches==1) {
+                    $v = $matches[0];
+                } else {
+                    $v = join "", map {"($_)"} @matches;
+                }
+            } else {
+                $v = "";
+            }
+            $extract{"qr:$qr"} = $v;
         }
     }
 
@@ -427,7 +436,6 @@ sub parse_report {
             }
         }
         if ($in_env_context) {
-            $DB::single++;
             if (/^\s{4}(\S+)\s*=\s*(.*)$/) {
                 $extract{"env:$1"} = $2;
             }
