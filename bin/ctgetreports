@@ -29,6 +29,10 @@ options are C<html> and C<yaml>. Default should be html but is
 temporarily switched to yaml because the cpantesters site is under
 reconstruction.
 
+=item B<--dumpfile=s>
+
+If dumpvars are specified, dump them into this file. Defaults to "ctgetreports.out".
+
 =item B<--dumpvars=s>
 
 Dump all queryable variables matching the regular expression given as
@@ -44,8 +48,8 @@ After every parsed report asks if you want to see it in a pager.
 
 =item B<--local>
 
-Do not mirror more than neccessary. Use a local *.html file if present
-even if older than 24 hours.
+Do not mirror, use a local *.html file. Dies if the HTML or YAML file
+is missing, skips missing report files.
 
 =item B<--pager=s>
 
@@ -56,6 +60,11 @@ Pager (needed when -i is given). Defaults to C<less>.
 Query, may be repeated.
 
 Example: C<--q mod:Clone --q meta:writer>
+
+=item B<--quiet!>
+
+Do while (not output the usual query lines per parsed report. Quiet
+overrules verbose.
 
 =item B<--raw!>
 
@@ -92,6 +101,7 @@ further inspection.
 
 We always only fetch the reports for the most recent (optionally
 picked) release. Target root directory is C<$HOME/var/cpantesters>
+(can be overridden with the --cachedir option).
 
 The C<--q> paramater can be repeated. It takes one argument which
 stands for a query. This query must consist of two parts, a qualifier
@@ -104,7 +114,7 @@ and the query itself. Qualifiers are one of the following
   env        environment variables
              e.g.: env:TERM
   meta       all other parameters
-             e.g.: meta:perl, meta:from
+             e.g.: meta:perl, meta:from, meta:date, meta:writer
   qr         boolean set if the appended regexp matches the report
              e.g.: qr:'division by zero'
 

@@ -6,6 +6,7 @@ use strict;
 use DateTime::Format::Strptime;
 use File::Basename qw(basename);
 use File::Path qw(mkpath);
+use HTML::Entities qw(decode_entities);
 use LWP::UserAgent;
 use XML::LibXML;
 use XML::LibXML::XPathContext;
@@ -21,7 +22,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.0.11');
+use version; our $VERSION = qv('0.0.12');
 
 =head1 SYNOPSIS
 
@@ -63,9 +64,26 @@ $dumpvar is a hashreference that gets filled with data.
     my $ua;
     sub _ua {
         return $ua if $ua;
-        $ua = LWP::UserAgent->new;
+        $ua = LWP::UserAgent->new
+            (
+             keep_alive => 1,
+            );
         $ua->parse_head(0);
         $ua;
+    }
+}
+
+{
+    my $xp;
+    sub _xp {
+        return $xp if $xp;
+        $xp = XML::LibXML->new;
+        $xp->keep_blanks(0);
+        $xp->clean_namespaces(1);
+        my $catalog = __FILE__;
+        $catalog =~ s|ParseReport.pm$|ParseReport/catalog|;
+        $xp->load_catalog($catalog);
+        return $xp;
     }
 }
 
@@ -74,35 +92,41 @@ sub _download_overview {
     my $format = $Opt{ctformat} ||= $default_ctformat;
     my $ctarget = "$cts_dir/$distro.$format";
     my $cheaders = "$cts_dir/$distro.headers";
-    if (! -e $ctarget or (!$Opt{local} && -M $ctarget > .25)) {
-        if (-e $ctarget && $Opt{verbose}) {
-            my(@stat) = stat _;
-            my $timestamp = gmtime $stat[9];
-            print "(timestamp $timestamp GMT)\n";
+    if ($Opt{local}) {
+        unless (-e $ctarget) {
+            die "Alert: No local file '$ctarget' found, cannot continue\n";
         }
-        print "Fetching $ctarget..." if $Opt{verbose};
-        my $uri = "http://www.cpantesters.org/show/$distro.$format";
-        my $resp = _ua->mirror($uri,$ctarget);
-        if ($resp->is_success) {
-            print "DONE\n" if $Opt{verbose};
-            open my $fh, ">", $cheaders or die;
-            for ($resp->headers->as_string) {
-                print $fh $_;
-                if ($Opt{verbose} && $Opt{verbose}>1) {
-                    print;
-                }
+    } else {
+        if (! -e $ctarget or -M $ctarget > .25) {
+            if (-e $ctarget && $Opt{verbose}) {
+                my(@stat) = stat _;
+                my $timestamp = gmtime $stat[9];
+                print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
             }
-        } elsif (304 == $resp->code) {
-            print "DONE (not modified)\n";
-            my $atime = my $mtime = time;
-            utime $atime, $mtime, $cheaders;
-        } else {
-            die sprintf
-                (
-                 "No success downloading %s: %s",
-                 $uri,
-                 $resp->status_line,
-                );
+            print STDERR "Fetching $ctarget..." if $Opt{verbose} && !$Opt{quiet};
+            my $uri = "http://www.cpantesters.org/show/$distro.$format";
+            my $resp = _ua->mirror($uri,$ctarget);
+            if ($resp->is_success) {
+                print STDERR "DONE\n" if $Opt{verbose} && !$Opt{quiet};
+                open my $fh, ">", $cheaders or die;
+                for ($resp->headers->as_string) {
+                    print $fh $_;
+                    if ($Opt{verbose} && $Opt{verbose}>1) {
+                        print STDERR $_ unless $Opt{quiet};
+                    }
+                }
+            } elsif (304 == $resp->code) {
+                print STDERR "DONE (not modified)\n" if $Opt{verbose} && !$Opt{quiet};
+                my $atime = my $mtime = time;
+                utime $atime, $mtime, $cheaders;
+            } else {
+                die sprintf
+                    (
+                     "No success downloading %s: %s",
+                     $uri,
+                     $resp->status_line,
+                    );
+            }
         }
     }
     return $ctarget;
@@ -122,16 +146,13 @@ sub _parse_html {
         $tree->eof;
         $content = $tree->as_XML;
     }
-    my $parser = XML::LibXML->new;;
-    $parser->keep_blanks(0);
-    $parser->clean_namespaces(1);
+    my $parser = _xp();
     my $doc = eval { $parser->parse_string($content) };
     my $err = $@;
     unless ($doc) {
         my $distro = basename $ctarget;
         die sprintf "Error while parsing %s\: %s", $distro, $err;
     }
-    $parser->clean_namespaces(1);
     my $xc = XML::LibXML::XPathContext->new($doc);
     my $nsu = $doc->documentElement->namespaceURI;
     $xc->registerNs('x', $nsu) if $nsu;
@@ -146,31 +167,49 @@ sub _parse_html {
     my $releasediv;
     if ($Opt{vdistro}) {
         $excuse_string = "selected distro '$Opt{vdistro}'";
+        my($fallbacktoversion) = $Opt{vdistro} =~ /(\d+\..*)/;
       RELEASE: for my $i (0..$#releasedivs) {
+            my $picked = "";
             my($x) = $nsu ?
                 $xc->findvalue("x:h2/x:a[2]/\@name",$releasedivs[$i]) :
                     $releasedivs[$i]->findvalue("h2/a[2]/\@name");
             $DB::single=1;
-            if ($x eq $Opt{vdistro}) {
-                $releasediv = $i;
-                last RELEASE;
+            if ($x) {
+                if ($x eq $Opt{vdistro}) {
+                    $releasediv = $i;
+                    $picked = " (picked)";
+                }
+                print STDERR "FOUND DISTRO: $x$picked\n" unless $Opt{quiet};
+            } else {
+                ($x) = $nsu ?
+                    $xc->findvalue("x:h2/x:a[1]/\@name",$releasedivs[$i]) :
+                        $releasedivs[$i]->findvalue("h2/a[1]/\@name");
+                if ($x eq $fallbacktoversion) {
+                    $releasediv = $i;
+                    $picked = " (picked)";
+                }
+                print STDERR "FOUND VERSION: $x$picked\n" unless $Opt{quiet};
             }
         }
     } else {
         $excuse_string = "any distro";
-        $releasediv = 0;
     }
     unless (defined $releasediv) {
-        warn "Warning: could not find $excuse_string in '$ctarget'";
-        return;
+        $releasediv = 0;
     }
+    $DB::single=1;
+    # using a[1] because a[2] is missing on the first entry
     ($selected_release_distrov) = $nsu ?
-        $xc->findvalue("x:h2/x:a[2]/\@name",$releasedivs[$releasediv]) :
-            $releasedivs[$releasediv]->findvalue("h2/a[2]/\@name");
+        $xc->findvalue("x:h2/x:a[1]/\@name",$releasedivs[$releasediv]) :
+            $releasedivs[$releasediv]->findvalue("h2/a[1]/\@name");
     ($selected_release_ul) = $nsu ?
         $xc->findnodes("x:ul",$releasedivs[$releasediv]) :
             $releasedivs[$releasediv]->findnodes("ul");
-    print "SELECTED: $selected_release_distrov\n";
+    unless (defined $selected_release_distrov) {
+        warn "Warning: could not find $excuse_string in '$ctarget'";
+        return;
+    }
+    print STDERR "SELECTED: $selected_release_distrov\n" unless $Opt{quiet};
     my($id);
     my @all;
     for my $test ($nsu ?
@@ -210,7 +249,7 @@ sub _parse_yaml {
         warn "Warning: could not find $excuse_string in '$ctarget'";
         return;
     }
-    print "SELECTED: $selected_release_distrov\n";
+    print STDERR "SELECTED: $selected_release_distrov\n" unless $Opt{quiet};
     my @all;
     for my $test (@$arr) {
         my $id = $test->{id};
@@ -228,23 +267,30 @@ sub parse_single_report {
     my $nnt_dir = "$Opt{cachedir}/nntp-testers";
     mkpath $nnt_dir;
     my $target = "$nnt_dir/$id";
-    unless (-e $target) {
-        print "Fetching $target..." if $Opt{verbose};
-        my $resp = _ua->mirror("http://www.nntp.perl.org/group/perl.cpan.testers/$id",$target);
-        if ($resp->is_success) {
-            if ($Opt{verbose}) {
-                my(@stat) = stat $target;
-                my $timestamp = gmtime $stat[9];
-                print "(timestamp $timestamp GMT)\n";
-                if ($Opt{verbose} > 1) {
-                    print $resp->headers->as_string;
+    if ($Opt{local}) {
+        unless (-e $target) {
+            warn "Warning: No local file '$target' found, skipping\n";
+            return;
+        }
+    } else {
+        if (! -e $target) {
+            print STDERR "Fetching $target..." if $Opt{verbose} && !$Opt{quiet};
+            my $resp = _ua->mirror("http://www.nntp.perl.org/group/perl.cpan.testers/$id",$target);
+            if ($resp->is_success) {
+                if ($Opt{verbose}) {
+                    my(@stat) = stat $target;
+                    my $timestamp = gmtime $stat[9];
+                    print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
+                    if ($Opt{verbose} > 1) {
+                        print STDERR $resp->headers->as_string unless $Opt{quiet};
+                    }
                 }
+                my $headers = "$target.headers";
+                open my $fh, ">", $headers or die;
+                print $fh $resp->headers->as_string;
+            } else {
+                die $resp->status_line;
             }
-            my $headers = "$target.headers";
-            open my $fh, ">", $headers or die;
-            print $fh $resp->headers->as_string;
-        } else {
-            die $resp->status_line;
         }
     }
     parse_report($target, $dumpvars, %Opt);
@@ -270,7 +316,11 @@ sub parse_distro {
         last if $Signal;
     }
     if ($Opt{dumpvars}) {
-        print YAML::Syck::Dump(\%dumpvars);
+        require YAML::Syck;
+        my $dumpfile = $Opt{dumpfile} || "ctgetreports.out";
+        open my $fh, ">", $dumpfile or die "Could not open '$dumpfile' for writing: $!";
+        print $fh YAML::Syck::Dump(\%dumpvars);
+        close $fh or die "Could not close '$dumpfile': $!"
     }
 }
 
@@ -279,6 +329,10 @@ sub parse_distro {
 Reads one report. $target is the local filename to read. $dumpvars is
 a hashref which gets filled. %Opt are the options as described in the
 C<ctgetreports> manpage.
+
+Note: this parsing is a bit dirty but as it seems good enough I'm not
+inclined to change it. We parse HTML with a regexps only, no HTML
+parser working, only the entities are decoded.
 
 =cut
 sub parse_report {
@@ -294,7 +348,7 @@ sub parse_report {
     if ($Opt{raw} || @qr) {
         open my $fh, $target or die "Could not open '$target': $!";
         local $/;
-        $report = <$fh>;
+        $report = decode_entities <$fh>;
         close $fh;
         for my $qr (@qr) {
             my $cqr = eval "qr{$qr}";
@@ -339,7 +393,7 @@ sub parse_report {
     seek $fh, 0, 0;
   LINE: while (<$fh>) {
         chomp; # reliable line endings?
-        s/&quot;//; # HTML !!!
+        $_ = decode_entities $_;
         if (/^--------/ && $previous_line[-2] && $previous_line[-2] =~ /^--------/) {
             $current_headline = $previous_line[-1];
             if ($current_headline =~ /PROGRAM OUTPUT/) {
@@ -359,6 +413,7 @@ sub parse_report {
             } elsif (/Summary of my perl5 \((.+)\) configuration:/) {
                 $p5 = $1;
                 $in_summary = 1;
+                $in_env_context = 0;
             }
             if ($p5) {
                 my($r,$v,$s,$p);
@@ -503,11 +558,13 @@ sub parse_report {
                 }
             }
             if (/(\s+)(Module\s+)(Need\s+)Have/) {
+                $in_env_context = 0;
                 $moduleunpack = {
                                  tpl => 'a'.length($1).'a'.length($2).'a'.length($3).'a*',
                                  type => 1,
                                 };
             } elsif (/(\s+)(Module Name\s+)(Have)(\s+)Want/) {
+                $in_env_context = 0;
                 my $adjust_1 = 0;
                 my $adjust_2 = -length($4);
                 my $adjust_3 = length($4);
@@ -520,10 +577,12 @@ sub parse_report {
             }
         }
         if (/PREREQUISITES|Prerequisite modules loaded/) {
+            $in_env_context = 0;
             $expect_prereq=1;
         }
         if ($expecting_toolchain_soon) {
             if (/(\s+)(Module\s+) Have/) {
+                $in_env_context = 0;
                 $expect_toolchain=1;
                 $expecting_toolchain_soon=0;
                 $moduleunpack = {
@@ -533,6 +592,7 @@ sub parse_report {
             }
         }
         if (/toolchain versions installed/) {
+            $in_env_context = 0;
             $expecting_toolchain_soon=1;
         }
     }                           # LINE
@@ -549,10 +609,10 @@ sub parse_report {
         my $have  = $extract{$want} || "";
         $diag .= " $want\[$have]";
     }
-    printf " %-4s %8d%s\n", $ok, $id, $diag;
+    printf STDERR " %-4s %8d%s\n", $ok, $id, $diag unless $Opt{quiet};
     if ($Opt{raw}) {
         $report =~ s/\s+\z//;
-        print $report, "\n================\n";
+        print STDERR $report, "\n================\n" unless $Opt{quiet};
     }
     if ($Opt{interactive}) {
         require IO::Prompt;
@@ -565,7 +625,7 @@ sub parse_report {
              -u => qr/[ynq]/,
              -onechar,
             );
-        print "\n";
+        print STDERR "\n" unless $Opt{quiet};
         if ($ans eq "y") {
             open my $ifh, "<", $target or die "Could not open $target: $!";
             $Opt{pager} ||= "less";
