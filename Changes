@@ -1,3 +1,16 @@
+2008-10-21  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
+
+	* release 0.0.13
+
+	* forgot to include the catalog files in the last release
+
+	* meta:writer now also detected on CPANPLUS::Dist::YACSmoke
+
+	* new option --cturl to temporarily switch servers
+
+	* new experimental option --solve to run some statistics to aid
+	determining blame candidates.
+
 2008-10-19  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.0.12

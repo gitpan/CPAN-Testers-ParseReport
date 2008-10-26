@@ -14,18 +14,23 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 90233d79966382b8d614dc8e93cafb0d55cd034f Changes
-SHA1 ab7c56347fcf786839bc148b43360d7d0233c10b MANIFEST
+SHA1 1c76ef68d48414b087e7d7f304f83d1261c49f07 Changes
+SHA1 4b7765253afa01674b9ab18484c3d89c6af90f34 MANIFEST
 SHA1 76795e574a20788cdbd9514d2513cfb8b8d497f7 MANIFEST.SKIP
-SHA1 462cb5aafa4faf68e5805bdfde00da6519bc534e META.yml
-SHA1 25656838fd294ed6b1c8ab552dc46a46627a3f36 Makefile.PL
+SHA1 3ac5ec563f1b46245ae9047716174690d204e5a3 META.yml
+SHA1 2fd61e7221d10b92346c2e198a01d4d4edb56165 Makefile.PL
 SHA1 af348ab0f2fa69ad7dd041744d3fc4c1674acf88 README
 SHA1 88117f0dda3b67f28171bcc666b739a7c08d12c0 TODO
-SHA1 c3ccad647ce21d3e1d8e93fec5b5c6ce8f5aa0c7 bin/ctgetreports
-SHA1 0c8b8d4f4bbda533549df97fe8c1623580bd9d75 lib/CPAN/Testers/ParseReport.pm
+SHA1 7cc19358dc516f9acddd01d9f808ea01bb8f51f4 bin/ctgetreports
+SHA1 ba9b408017070abf10118cff7b92a5f0ee5aec08 bin/ctsolvereports
+SHA1 75ffa21510f05cd0bf05aca6c6b20244432467e5 lib/CPAN/Testers/ParseReport.pm
+SHA1 6236447d69c01e46adef7a159470de3dab3cea73 lib/CPAN/Testers/ParseReport/catalog
+SHA1 f9b739ae2d1b7fbe44edf6fa1f8e72b484cedb5c lib/CPAN/Testers/ParseReport/catalog.dtd
+SHA1 223952bb81d253cf4cdac18e88b5513ea14fe824 lib/CPAN/Testers/ParseReport/loose.dtd
+SHA1 5ad053b310743766a9cf3bf6e7090c97d6bdfb66 lib/CPAN/Testers/ParseReport/xhtml1-transitional.dtd
 SHA1 a1ea507fdde0592c088373182ba28edf0a2a4467 t/00-load.t
 SHA1 ac2a1155ee576a6742231d3745e75698044e2408 t/01-metayaml.t
-SHA1 421d962e5055119b22c75fde7a881c88cd3b2d6d t/ctgetreports.t
+SHA1 3b31627bea2c6802eba25761ee0cac905ac7a4a1 t/ctgetreports.t
 SHA1 0b1c5a2d59be6bfa7d60c64cd964fea6a0331705 t/pod-coverage.t
 SHA1 640935336dc1123c0069bcf5432bcaedc2cf22d3 t/pod.t
 SHA1 dc81efbf47d931f84070d06f36eec909b25fbd03 t/run.t
@@ -163,7 +168,7 @@ SHA1 4e42211a6d8c4028ec8e931beedcf628906ee8db t/var/nntp-testers/2433487
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQFI+5q17IA58KMXwV0RAivtAKDF7KzJUaMPOBB6iNLQKdn69ATYLQCg5G4d
-h6Lqvaxb3GpLopJw5D5DheU=
-=gxaT
+iD4DBQFJBCPu7IA58KMXwV0RAticAJwO6DusmqaOzBnzWCK1LwTOD1/ahACY3smW
+MALZ+SKcVwtrlaVJbV1NKw==
+=vgEZ
 -----END PGP SIGNATURE-----
