@@ -8,7 +8,7 @@ use File::Basename qw(basename);
 use File::Path qw(mkpath);
 use HTML::Entities qw(decode_entities);
 use LWP::UserAgent;
-use List::Util qw(max sum);
+use List::Util qw(max min sum);
 use Time::Local ();
 use XML::LibXML;
 use XML::LibXML::XPathContext;
@@ -25,7 +25,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.0.15');
+use version; our $VERSION = qv('0.0.16');
 
 =head1 SYNOPSIS
 
@@ -763,7 +763,11 @@ sub solve {
         }
         warn "variable[$variable]keys[$keys]X[@X]\n" unless $Opt{quiet};
         next VAR unless @X > 1;
-        my $reg = Statistics::Regression->new($variable,\@X);
+        my %regdata =
+            (
+             X => \@X,
+             data => [],
+            );
       RECORD: for my $rec (@{$V->{"==DATA=="}}) {
             my $y;
             if ($rec->{"meta:ok"} eq "PASS") {
@@ -774,6 +778,7 @@ sub solve {
                 next RECORD;
             }
             my %obs;
+            $obs{Y} = $y;
             @obs{@X} = (0) x @X;
             $obs{const} = 1;
             for my $x (@X) {
@@ -797,34 +802,57 @@ sub solve {
                     $obs{$x} = $normalize_numeric{$v}->($rec->{$v});
                 }
             }
-            $reg->include($y, \%obs);
+            push @{$regdata{data}}, \%obs;
         }
-        eval {$reg->standarderrors};
-        if ($@) {
-            if ($Opt{verbose}>=2) {
-                require YAML::Syck;
-                warn YAML::Syck::Dump
-                    ({error=>"could not determine standarderrors",
-                      variable=>$variable,
-                      k=>$reg->k,
-                      n=>$reg->n,
-                      X=>\@X,
-                      errorstr => $@,
-                     });
-            }
-        } else {
-            # $reg->print;
-            push @regression, $reg;
-        }
+        _run_regression ($variable, \%regdata, \@regression, \%Opt);
     }
-    my $top = $Opt{solvetop} || 3;
+    my $top = min ($Opt{solvetop} || 3, scalar @regression);
     my $score = 0;
+    printf
+        (
+         "State after regression testing: %d results, showing top %d\n\n",
+         scalar @regression,
+         $top,
+        );
     for my $reg (sort {$b->rsq <=> $a->rsq} @regression) {
         printf "(%d)\n", ++$score;
         $reg->print;
         last if --$top <= 0;
     }
 }
+}
+
+sub _run_regression {
+    my($variable,$regdata,$regression,$opt) = @_;
+    my @X = @{$regdata->{X}};
+    while (@X > 1) {
+        my $reg = Statistics::Regression->new($variable,\@X);
+        for my $obs (@{$regdata->{data}}) {
+            my $y = delete $obs->{Y};
+            $reg->include($y, $obs);
+            $obs->{Y} = $y;
+        }
+        eval {$reg->standarderrors};
+        if ($@) {
+            if ($opt->{verbose} && $opt->{verbose}>=2) {
+                require YAML::Syck;
+                warn YAML::Syck::Dump
+                    ({error=>"could not determine standarderrors",
+                      variable=>$variable,
+                      k=>$reg->k,
+                      n=>$reg->n,
+                      X=>$regdata->{"X"},
+                      errorstr => $@,
+                     });
+            }
+            # reduce k in case that linear dependencies disturbed us
+            splice @X, 1, 1;
+        } else {
+            # $reg->print;
+            push @$regression, $reg;
+            return;
+        }
+    }
 }
 
 =head1 AUTHOR
