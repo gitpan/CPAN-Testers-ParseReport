@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               CPAN-Testers-ParseReport
-version:            0.0.18
+version:            0.0.19
 abstract:           parse reports to www.cpantesters.org from various sources
 author:  []
 license:            perl
@@ -8,6 +8,7 @@ distribution_type:  module
 configure_requires:
     ExtUtils::MakeMaker:  0
 requires:
+    DateTime::Format::DateParse:  0
     DateTime::Format::Strptime:  0
     File::Path:           0
     Getopt::Long:         0
@@ -27,7 +28,7 @@ requires:
 provides:
     CPAN::Testers::ParseReport:
         file:  lib/CPAN/Testers/ParseReport.pm
-        version:  0.0.18
+        version:  0.0.19
 no_index:
     directory:
         - t
