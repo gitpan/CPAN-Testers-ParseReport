@@ -14,16 +14,16 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 bfda961468ed7ad83727abddfe7a8912ff85ba29 Changes
+SHA1 d3b5a323f1d930acfbc53494c78b602ac0de21f8 Changes
 SHA1 4b7765253afa01674b9ab18484c3d89c6af90f34 MANIFEST
 SHA1 76795e574a20788cdbd9514d2513cfb8b8d497f7 MANIFEST.SKIP
-SHA1 1fcc8e309398bbb372c2d890ce6ba424ed35cef7 META.yml
+SHA1 f523f853da4847e2d9c2bc674969440dc8c4037d META.yml
 SHA1 517ed817c283a531d88efdd9239d12761e25de79 Makefile.PL
 SHA1 af348ab0f2fa69ad7dd041744d3fc4c1674acf88 README
-SHA1 e491fe4bbdd34a72dbdaae1d772cab94771e1512 TODO
-SHA1 7b90fa73d49233169e477915cbf8e915242b3fb2 bin/ctgetreports
+SHA1 d2f3c80af6b544edf54cdf0ac2ad93a469c1044a TODO
+SHA1 825ced0ae96104dbd5ec913e54367af5e5d64f3d bin/ctgetreports
 SHA1 ba9b408017070abf10118cff7b92a5f0ee5aec08 bin/ctsolvereports
-SHA1 73ac13cb8b7b06441e730d4482b8514b0536ef1d lib/CPAN/Testers/ParseReport.pm
+SHA1 d59fbaf5bcd407d7dcc3faaf4839ad24420982dd lib/CPAN/Testers/ParseReport.pm
 SHA1 6236447d69c01e46adef7a159470de3dab3cea73 lib/CPAN/Testers/ParseReport/catalog
 SHA1 f9b739ae2d1b7fbe44edf6fa1f8e72b484cedb5c lib/CPAN/Testers/ParseReport/catalog.dtd
 SHA1 223952bb81d253cf4cdac18e88b5513ea14fe824 lib/CPAN/Testers/ParseReport/loose.dtd
@@ -168,7 +168,7 @@ SHA1 4e42211a6d8c4028ec8e931beedcf628906ee8db t/var/nntp-testers/2433487
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQFJGLPV7IA58KMXwV0RAgdOAJ40K4vaM7I2bSXltScFWjZ451MlQgCfTMPW
-N7rGc5P/ykpum6M6rv2nUFA=
-=1Tyy
+iD8DBQFJROmF7IA58KMXwV0RAjUNAJ4wNonYZPweLPX0KUsibFAk1QgDnQCgoIpK
+uNigOM48ixf+jgzkjkZ5cUs=
+=Oq+Q
 -----END PGP SIGNATURE-----
