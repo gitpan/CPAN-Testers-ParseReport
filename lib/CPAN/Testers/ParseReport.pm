@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.0.20');
+use version; our $VERSION = qv('0.0.21');
 
 =head1 SYNOPSIS
 
@@ -294,7 +294,7 @@ sub parse_single_report {
             if ($Opt{transport} eq "nntp") {
                 my $article = _nntp->article($id);
                 unless ($article) {
-                    die {severity=>0,text=>"NNTP-Server does did not return an article for id[$id]"};
+                    die {severity=>0,text=>"NNTP-Server did not return an article for id[$id]"};
                 }
                 open my $fh, ">", $target or die {severity=>1,text=>"Could not open >$target: $!"};
                 print $fh @$article;
@@ -882,6 +882,8 @@ sub solve {
         _run_regression ($variable, \%regdata, \@regression, \%Opt);
     }
     my $top = min ($Opt{solvetop} || 3, scalar @regression);
+    my $max_rsq = sum map {1==$_->rsq ? 1 : 0} @regression;
+    $top = $max_rsq if $max_rsq > $top;
     my $score = 0;
     printf
         (
@@ -889,7 +891,11 @@ sub solve {
          scalar @regression,
          $top,
         );
-    for my $reg (sort {$b->rsq <=> $a->rsq} @regression) {
+    for my $reg (sort {
+                     $b->rsq <=> $a->rsq
+                     ||
+                     $a->k <=> $b->k
+                 } @regression) {
         printf "(%d)\n", ++$score;
         $reg->print;
         last if --$top <= 0;
