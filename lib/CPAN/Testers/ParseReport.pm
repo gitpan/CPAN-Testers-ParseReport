@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.0.22');
+use version; our $VERSION = qv('0.0.23');
 
 =head1 SYNOPSIS
 
@@ -530,6 +530,10 @@ sub parse_report {
                     # pattern => "%a, %d %b %Y %T %z",
                     $dt = DateTime::Format::DateParse->parse_datetime($date);
                 }
+                unless ($dt) {
+                    warn "Could not parse date[$date], setting to epoch 0";
+                    $dt = DateTime->from_epoch( epoch => 0 );
+                }
                 $extract{"meta:date"} = $dt->datetime;
             }
             $extract{"meta:date"} =~ s/\.$// if $extract{"meta:date"};
@@ -680,6 +684,9 @@ sub parse_report {
     }                           # LINE
     if ($Opt{solve}) {
         $extract{id} = $id;
+        if ($extract{"conf:osvers"} && $extract{"conf:archname"}) {
+            $extract{"conf:archame+osvers"} = join " ", @extract{"conf:archname","conf:osvers"};
+        }
         my $data = $dumpvars->{"==DATA=="} ||= [];
         push @$data, \%extract;
     }
@@ -737,6 +744,11 @@ confuse this with a prove, rather take it as a useful hint. It can
 save you minutes of staring at data and provide a quick overview where
 one should look closer. Displays the N top candidates, where N
 defaults to 3 and can be set with the C<$Opt{solvetop}> variable.
+Regressions results with an R^2 of 1.00 are displayed in any case.
+
+The function is called when the option C<-solve> is give on the
+commandline. Several extra config variables are calculated, see source
+code for details.
 
 =cut
 {
@@ -897,7 +909,10 @@ sub solve {
                      $a->k <=> $b->k
                  } @regression) {
         printf "(%d)\n", ++$score;
-        $reg->print;
+        eval { $reg->print; };
+        if ($@) {
+            printf "\n\nOops, Statistics::Regression died during ->print() with error message[$@]\n\n";
+        }
         last if --$top <= 0;
     }
 }
@@ -913,12 +928,15 @@ sub _run_regression {
             $reg->include($y, $obs);
             $obs->{Y} = $y;
         }
-        eval {$reg->theta;$reg->standarderrors;$reg->rsq;};
+        eval {$reg->theta;
+              my @e = $reg->standarderrors;
+              die "found standarderrors == 0" if grep { 0 == $_ } @e;
+              $reg->rsq;};
         if ($@) {
             if ($opt->{verbose} && $opt->{verbose}>=2) {
                 require YAML::Syck;
                 warn YAML::Syck::Dump
-                    ({error=>"could not determine standarderrors",
+                    ({error=>"could not determine some regression parameters",
                       variable=>$variable,
                       k=>$reg->k,
                       n=>$reg->n,
