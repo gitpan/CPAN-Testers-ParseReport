@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.0.23');
+use version; our $VERSION = qv('0.1.0');
 
 =head1 SYNOPSIS
 
@@ -73,6 +73,7 @@ $dumpvar is a hashreference that gets filled with data.
         $ua = LWP::UserAgent->new
             (
              keep_alive => 1,
+             env_proxy => 1,
             );
         $ua->parse_head(0);
         $ua;
@@ -334,6 +335,10 @@ sub parse_distro {
         require Statistics::Regression;
         $Opt{dumpvars} = "." unless defined $Opt{dumpvars};
     }
+    if (!$Opt{vdistro} && $distro =~ /^(.+)-(?i:v?\d+)(?:\.\d+)*\w*$/) {
+        $Opt{vdistro} = $distro;
+        $distro = $1;
+    }
     my $ctarget = _download_overview($cts_dir, $distro, %Opt);
     my $reports;
     $Opt{ctformat} ||= $default_ctformat;
@@ -370,11 +375,13 @@ sub parse_distro {
     }
 }
 
-=head2 parse_report($target,$dumpvars,%Opt)
+=head2 $extract = parse_report($target,$dumpvars,%Opt)
 
 Reads one report. $target is the local filename to read. $dumpvars is
-a hashref which gets filled. %Opt are the options as described in the
-C<ctgetreports> manpage.
+a hashref which gets filled with descriptive stats about
+PASS/FAIL/etc. %Opt are the options as described in the
+C<ctgetreports> manpage. $extract is a hashref containing the found
+variables.
 
 Note: this parsing is a bit dirty but as it seems good enough I'm not
 inclined to change it. We parse HTML with regexps only, not an HTML
@@ -474,7 +481,13 @@ sub parse_report {
                 $in_env_context = 0;
             }
         }
-        unless ($extract{"meta:perl"}) {
+        if ($extract{"meta:perl"}) {
+            if (    $in_summary
+                and !$extract{"conf:git_commit_id"}
+                and /Commit id: ([[:xdigit:]]+)/) {
+                $extract{"conf:git_commit_id"} = $1;
+            }
+        } else {
             my $p5;
             if (0) {
             } elsif (/Summary of my perl5 \((.+)\) configuration:/) {
@@ -577,7 +590,6 @@ sub parse_report {
                     $v =~ s/^\s+//;
                     $v =~ s/\s+$//;
                     if ($qr && $ck =~ $qr) {
-                        $dumpvars->{$ck}{$v}{$ok}++;
                         $extract{$ck} = $v;
                     } elsif ($conf_vars{$ck}) {
                         $extract{$ck} = $v;
@@ -624,6 +636,8 @@ sub parse_report {
                         $moduleunpack = {};
                         $expect_prereq = 0;
                         next LINE;
+                    } elsif ($v =~ /\s/) {
+                        ($module,$v) = split " ", $_;
                     }
                 } elsif ($moduleunpack->{type} == 3) {
                     (my $leader,$module,$v) = eval { unpack $moduleunpack->{tpl}, $_; };
@@ -640,6 +654,9 @@ sub parse_report {
                 if ($module) {
                     $v =~ s/^\s+//;
                     $v =~ s/\s+$//;
+                    if ($v eq "Have") {
+                        next LINE;
+                    }
                     $extract{"mod:$module"} = $v;
                 }
             }
@@ -734,6 +751,7 @@ sub parse_report {
             return;
         }
     }
+    return \%extract;
 }
 
 =head2 solve
@@ -895,7 +913,7 @@ sub solve {
     }
     my $top = min ($Opt{solvetop} || 3, scalar @regression);
     my $max_rsq = sum map {1==$_->rsq ? 1 : 0} @regression;
-    $top = $max_rsq if $max_rsq > $top;
+    $top = $max_rsq if $max_rsq && $max_rsq > $top;
     my $score = 0;
     printf
         (

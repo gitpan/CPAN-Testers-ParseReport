@@ -6,13 +6,16 @@ ctgetreports - Quickly fetch cpantesters results with all reports
 
 =head1 SYNOPSIS
 
-  ctgetreports [options] distroname ...
+  ctgetreports [options] distroname
   ctgetreports [options] --report number ...
   ctgetreports -h
 
 =head1 OPTIONS
 
-=over 8
+A distroname is either unversioned as in C<IPC-Run> or versioned as in
+C<IPC-Run-0.80>.
+
+=over 2
 
 =cut
 
@@ -117,10 +120,12 @@ C<http> uses LWP::UserAgent. Defaults to nntp.
 
 =item B<--vdistro=s>
 
-Versioned distro. Needed if we do not want the most recent. Makes no
-sense if there is more than one argument on the command line.
+Versioned distro, e.g.
 
-Example: C<--vdistro IPC-Run-0.80>
+  IPC-Run-0.80
+
+Usually not needed because a versioned distro name can be specified as
+normal commandline argument.
 
 =item B<--verbose|v+>
 
@@ -218,12 +223,12 @@ most recent:
 
 Pick the specific release IPC-Run-0.80:
 
-  $0 --vdistro IPC-Run-0.80 IPC-Run
+  $0 IPC-Run-0.80
 
 The following displays in its own column if the report contains the
 regexp C<division by zero>:
 
-  $0 --q qr:"division by zero" --vdistro 'CPAN-Testers-ParseReport-0.0.7' CPAN-Testers-ParseReport
+  $0 --q qr:"division by zero" CPAN-Testers-ParseReport-0.0.7
 
 The following is a simple job to refresh all HTML pages we already
 have and fetch new reports referenced there too:
@@ -264,7 +269,7 @@ if ($Opt{report}) {
         pod2usage(2);
     }
 } else {
-    if (! @ARGV) {
+    if (1 != @ARGV) {
         pod2usage(2);
     }
 }
@@ -285,15 +290,16 @@ if ($Opt{dumpvars}) {
 
 $|=1;
 if (my $reports = delete $Opt{report}) {
-  REPORT: for my $report (@$reports) {
-        CPAN::Testers::ParseReport::parse_single_report({id => $report},+{},%Opt);
-        last DISTRO if $CPAN::Testers::ParseReport::Signal;
+    my $dumpvars = {};
+ REPORT: for my $report (@$reports) {
+        CPAN::Testers::ParseReport::parse_single_report({id => $report},$dumpvars,%Opt);
+        last REPORT if $CPAN::Testers::ParseReport::Signal;
     }
+    my $dumpfile = $Opt{dumpfile} || "ctgetreports.out";
+    YAML::Syck::DumpFile($dumpfile,$dumpvars);
 } else {
-  DISTRO: for my $distro (@ARGV) {
-        CPAN::Testers::ParseReport::parse_distro($distro,%Opt);
-        last DISTRO if $CPAN::Testers::ParseReport::Signal;
-    }
+    $ARGV[0] =~ s|.+/||;
+    CPAN::Testers::ParseReport::parse_distro($ARGV[0],%Opt);
 }
 
 __END__

@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.51.
+signed via the Module::Signature module, version 0.55.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -14,16 +14,16 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 9c78f955a71e8555ad3006d138e2b4f51c64a82e Changes
+SHA1 7c18922a6151a9042e3b750f3d39b2f1a988ac3c Changes
 SHA1 4266cd569b441e31560dcb50d4d4bd8672fd5a7a MANIFEST
 SHA1 76795e574a20788cdbd9514d2513cfb8b8d497f7 MANIFEST.SKIP
-SHA1 6f5f300cf9f53dc4cadbbf13db50d4cb15365d3e META.yml
-SHA1 517ed817c283a531d88efdd9239d12761e25de79 Makefile.PL
+SHA1 3a381a6a55f82873cb30fa491e1e2e49948d093e META.yml
+SHA1 076db58370fccf8a4280a4a928e25008a00fe4bc Makefile.PL
 SHA1 af348ab0f2fa69ad7dd041744d3fc4c1674acf88 README
 SHA1 44a992d2b4196b3ca2d61c7422dd141a045aba43 TODO
-SHA1 74df63405ac771785b7dd635d6cbea792cfa9f36 bin/ctgetreports
+SHA1 8aea749bdb28cedaf4131ffea1374859a2e8e85f bin/ctgetreports
 SHA1 ba9b408017070abf10118cff7b92a5f0ee5aec08 bin/ctsolvereports
-SHA1 2ccd4f867998ba493ab68ebc5b33ef44621eadb2 lib/CPAN/Testers/ParseReport.pm
+SHA1 453a600384510a940b96fb0e9f66a0924f9dc9ae lib/CPAN/Testers/ParseReport.pm
 SHA1 6236447d69c01e46adef7a159470de3dab3cea73 lib/CPAN/Testers/ParseReport/catalog
 SHA1 f9b739ae2d1b7fbe44edf6fa1f8e72b484cedb5c lib/CPAN/Testers/ParseReport/catalog.dtd
 SHA1 223952bb81d253cf4cdac18e88b5513ea14fe824 lib/CPAN/Testers/ParseReport/loose.dtd
@@ -168,7 +168,7 @@ SHA1 4e42211a6d8c4028ec8e931beedcf628906ee8db t/var/nntp-testers/2433487
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAklaj/UACgkQ7IA58KMXwV3G3QCgsrT0joMYeWciiiAjTnQeOLEV
-iUwAnj7RmaVBd/6B+iSBd3ZVs8T8Qx+r
-=KdLQ
+iEYEARECAAYFAkm4tSIACgkQ7IA58KMXwV0PzQCfVHZ8VVEXDFDiTR3xT5pMCbS8
+IAoAoIWmKhdjqzoWT0Gl2FYIRjUs3/pi
+=drn1
 -----END PGP SIGNATURE-----
