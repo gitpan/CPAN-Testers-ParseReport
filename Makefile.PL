@@ -40,6 +40,7 @@ WriteMakefile
      'NAME' => 'CPAN::Testers::ParseReport',
      'VERSION_FROM' => $::version_from,
      'PREREQ_PM' => {
+                     'Config::Perl::V'             => 0,
                      'DateTime::Format::Strptime'  => 0,
                      'DateTime::Format::DateParse' => 0,
                      'File::Path'                  => 0,
@@ -48,6 +49,7 @@ WriteMakefile
                      'IO::Prompt'                  => 0,
                      'LWP::UserAgent'              => 0,
                      'List::Util'                  => 0,
+                     'MIME::QuotedPrint'           => 0,
                      'Net::NNTP'                   => 0,
                      'Pod::Usage'                  => 0,
                      'Statistics::Regression'      => 0,
