@@ -30,7 +30,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.2');
+use version; our $VERSION = qv('0.1.3');
 
 =head1 SYNOPSIS
 
@@ -256,7 +256,7 @@ sub _parse_yaml {
         $excuse_string = "any distro";
         my $last_addition;
         my %seen;
-        for my $report (@$arr) {
+        for my $report (sort { $a->{id} <=> $b->{id} } @$arr) {
             unless ($seen{$report->{distversion}}++) {
                 $last_addition = $report->{distversion};
             }
