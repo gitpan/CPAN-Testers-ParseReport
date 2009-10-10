@@ -25,6 +25,14 @@ my $optpod = <<'=back';
 
 Directory to keep mirrored data in. Defaults to C<$HOME/var/cpantesters>.
 
+=item B<--ctdb=s>
+
+If you have your own copy of the cpan testers I<cpanstats> database
+you can use this to set the path to the database. Must not be used
+together with C<--cturl>. Requires
+C<CPAN::WWW::Testers::Generator::Database> and C<CPAN::DistnameInfo>
+installed.
+
 =item B<--ctformat=s>
 
 Format of the cpan-testers file that should be downloaded. Available

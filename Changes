@@ -1,3 +1,16 @@
+2009-10-10  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.4
+
+	* introduce --ctdb option to use a local sqlite database instead of
+	asking cpantesters for yaml files (Andreas Koenig)
+
+	* Don't croak on invalid Date headers (Ask Bjørn Hansen) and protect
+	date to time converter against unexpected date format (Andreas Koenig)
+
+	* Avoid infinite loop if the last line of a report ends with
+	  a '!' (Ask Bjørn Hansen)
+
 2009-06-28  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.1.3

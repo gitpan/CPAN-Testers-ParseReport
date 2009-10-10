@@ -30,7 +30,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.3');
+use version; our $VERSION = qv('0.1.4');
 
 =head1 SYNOPSIS
 
@@ -54,17 +54,22 @@ the functions unaltered.
 
 =head2 parse_distro($distro,%options)
 
-reads the cpantesters HTML page or the YAML file for the distro and
-loops through the reports for the specified or most recent version of
-that distro found in these data.
+reads the cpantesters HTML page or the YAML file or the local database
+for the distro and loops through the reports for the specified or most
+recent version of that distro found in these data.
 
-=head2 parse_single_report($report,$dumpvars,%options)
+parse_distro() intentionally has no meaningful return value, different
+options would require different ones.
+
+=head2 $extract = parse_single_report($report,$dumpvars,%options)
 
 mirrors and reads this report. $report is of the form
 
   { id => number }
 
 $dumpvar is a hashreference that gets filled with data.
+
+$extract is the result of parse_report() described below.
 
 =cut
 
@@ -341,13 +346,39 @@ sub parse_distro {
         $Opt{vdistro} = $distro;
         $distro = $1;
     }
-    my $ctarget = _download_overview($cts_dir, $distro, %Opt);
     my $reports;
-    $Opt{ctformat} ||= $default_ctformat;
-    if ($Opt{ctformat} eq "html") {
-        $reports = _parse_html($ctarget,%Opt);
+    if (my $ctdb = $Opt{ctdb}) {
+        require CPAN::WWW::Testers::Generator::Database;
+        require CPAN::DistnameInfo;
+        my $dbi = CPAN::WWW::Testers::Generator::Database->new(database=>$ctdb) or die "Alert: unknown error while opening database '$ctdb'";
+        unless ($Opt{vdistro}) {
+            my $sql = "select version from cpanstats where dist=? order by id";
+            my @rows = $dbi->get_query($sql,$distro);
+            my($newest,%seen);
+            for my $row (@rows) {
+                $newest = $row->[0] unless $seen{$row->[0]}++;
+            }
+            $Opt{vdistro} = "$distro-$newest";
+        }
+        my $d = CPAN::DistnameInfo->new("FOO/$Opt{vdistro}.tgz");
+        my $dist = $d->dist;
+        my $version = $d->version;
+        my $sql = "select id from cpanstats where dist=? and version=? order by id desc";
+        my @rows = $dbi->get_query($sql,$dist,$version);
+        my @all;
+        for my $row (@rows) {
+            my $id = $row->[0];
+            push @all, {id=>$id};
+        }
+        $reports = \@all;
     } else {
-        $reports = _parse_yaml($ctarget,%Opt);
+        my $ctarget = _download_overview($cts_dir, $distro, %Opt);
+        $Opt{ctformat} ||= $default_ctformat;
+        if ($Opt{ctformat} eq "html") {
+            $reports = _parse_html($ctarget,%Opt);
+        } else {
+            $reports = _parse_yaml($ctarget,%Opt);
+        }
     }
     return unless $reports;
     for my $report (@$reports) {
@@ -472,7 +503,7 @@ sub parse_report {
     }
  LINE: while (@rlines) {
         $_ = shift @rlines;
-        while (/!$/) {
+        while (/!$/ and @rlines) {
             my $followupline = shift @rlines;
             $followupline =~ s/^\s+//; # remo leading space
             $_ .= $followupline;
@@ -550,7 +581,7 @@ sub parse_report {
                 } else {
                     # Sun, 28 Sep 2008 12:23:12 +0100 # but was not consistent
                     # pattern => "%a, %d %b %Y %T %z",
-                    $dt = DateTime::Format::DateParse->parse_datetime($date);
+                    $dt = eval { DateTime::Format::DateParse->parse_datetime($date) };
                 }
                 unless ($dt) {
                     warn "Could not parse date[$date], setting to epoch 0";
@@ -808,7 +839,11 @@ code for details.
         (
          id => sub { return shift },
          'meta:date' => sub {
-             my($Y,$M,$D,$h,$m,$s) = shift =~ /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/;
+             my $v = shift;
+             my($Y,$M,$D,$h,$m,$s) = $v =~ /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/;
+             unless (defined $M) {
+                 die "illegal value[$v] for a date";
+             }
              Time::Local::timegm($s,$m,$h,$D,$M-1,$Y);
          },
         );
@@ -919,7 +954,10 @@ sub solve {
                     # warn "DEBUG: y[$y]x[$x]obs[$obs{$x}]\n";
                 } elsif ($x =~ /^n_(.+)/) {
                     my $v = $1;
-                    $obs{$x} = $normalize_numeric{$v}->($rec->{$v});
+                    $obs{$x} = eval { $normalize_numeric{$v}->($rec->{$v}); };
+                    if ($@) {
+                        warn "Warning: error during parsing v[$v] in record[$rec->{id}]: $@; continuing with undef value";
+                    }
                 }
             }
             push @{$regdata{data}}, \%obs;

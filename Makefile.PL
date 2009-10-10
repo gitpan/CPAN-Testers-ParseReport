@@ -18,6 +18,11 @@ if ($ARGV[0] && $ARGV[0] eq "--setversion") {
     unless (-f $makefile) {
         die "no Makefile and no Makefile.old found";
     }
+    my $dirty = ! system "git status -a > /dev/null";
+    if ($dirty){
+        system "git status -a";
+        die "Not everything checked in?";
+    }
     open my $fh, "make -f $makefile the-release-name|" or die "Could not fork: $!";
     local $/;
     my ($have_version) = <$fh> =~ /^version\s+([\d\._]+)/m;
@@ -124,8 +129,9 @@ the-release-name :
 	$(NOECHO) $(ECHO) 'version ' $(VERSION)
 	$(NOECHO) $(ECHO) 'release-name ' $(DISTVNAME).tar$(SUFFIX)
 
-release ::
-	$(PERL) -I../CPAN/GIT/trunk/release-lib -S release $(DISTVNAME).tar$(SUFFIX)
+release :: disttest
+	git tag -m 'This is $(VERSION)' $(VERSION)
+	ls -l $(DISTVNAME).tar$(SUFFIX)
 	rm -rf $(DISTVNAME)
 
 sign:
