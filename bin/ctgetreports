@@ -116,6 +116,9 @@ with this number.
 
 Example: C<--report 1238673>
 
+If report is set and dumpvars is not set, dumpvars will be set to a
+dot (meaning that all variables shall be dumped into dumpfile).
+
 =item B<--solve!>
 
 Calls the solve function which tries to identify the best contenders
@@ -308,7 +311,9 @@ if ($Opt{solve}) {
         die "Statistics::Regression required for solved option: $@";
     }
 }
-
+if ($Opt{report}) {
+    $Opt{dumpvars} ||= ".";
+}
 if ($Opt{dumpvars}) {
     eval { require YAML::Syck };
     if ($@) {

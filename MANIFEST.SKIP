@@ -3,6 +3,7 @@
 \.orig$
 \.rej$
 \.out$
+\.tgz$
 \.svn
 \bRCS/
 \.git
@@ -17,4 +18,5 @@ pm_to_blib
 ^CPAN-Testers-ParseReport-
 ^DIST/
 ^Makefile$
+^tmp/
 git-daemon-export-ok

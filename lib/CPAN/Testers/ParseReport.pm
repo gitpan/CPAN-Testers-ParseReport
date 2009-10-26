@@ -30,7 +30,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.4');
+use version; our $VERSION = qv('0.1.5');
 
 =head1 SYNOPSIS
 
@@ -436,6 +436,7 @@ sub parse_report {
     my($target,$dumpvars,%Opt) = @_;
     our @q;
     my $id = basename($target);
+    # warn "DEBUG: id[$id]";
     my($ok,$about);
 
     my(%extract);
@@ -487,6 +488,7 @@ sub parse_report {
     my $expecting_toolchain_soon = 0;
 
     my $in_summary = 0;
+    my $in_summary_seen_platform = 0;
     my $in_prg_output = 0;
     my $in_env_context = 0;
 
@@ -494,7 +496,7 @@ sub parse_report {
     my @previous_line = ""; # so we can neutralize line breaks
     my @rlines = split /\r?\n/, $report;
  LINE: for (@rlines) {
-        next LINE unless ($isHTML ? m/<title>(\S+)\s+(\S+)/ : m/^Subject: (\S+)\s+(\S+)/);
+        next LINE unless ($isHTML ? m/<title>(\S+)\s+(\S+)/ : m/^Subject:\s*(\S+)\s+(\S+)/);
         $ok = $1;
         $about = $2;
         $extract{"meta:ok"}    = $ok;
@@ -524,7 +526,7 @@ sub parse_report {
         if ($extract{"meta:perl"}) {
             if (    $in_summary
                 and !$extract{"conf:git_commit_id"}
-                and /Commit id: ([[:xdigit:]]+)/) {
+                and /Commit id:\s*([[:xdigit:]]+)/) {
                 $extract{"conf:git_commit_id"} = $1;
             }
         } else {
@@ -555,7 +557,7 @@ sub parse_report {
             if (0) {
             } elsif ($isHTML ?
                      m|<div class="h_name">From:</div> <b>(.+?)</b><br/>| :
-                     m|^From: (.+)|
+                     m|^From:\s*(.+)|
                     ) {
                 $extract{"meta:from"} = $1;
             }
@@ -565,7 +567,7 @@ sub parse_report {
             if (0) {
             } elsif ($isHTML ?
                      m|<div class="h_name">Date:</div> (.+?)<br/>| :
-                     m|^Date: (.+)|
+                     m|^Date:\s*(.+)|
                     ) {
                 my $date = $1;
                 my($dt);
@@ -615,9 +617,14 @@ sub parse_report {
 
             my %conf_vars = map {($_ => 1)} grep { /^conf:/ } @q;
 
-            if (/^\s*$/ || m|</pre>|) {
+            if (/^\s+Platform:$/) {
+                $in_summary_seen_platform=1;
+            } elsif (/^\s*$/ || m|</pre>|) {
                 # if not html, we have reached the end now
-                $in_summary = 0;
+                if ($in_summary_seen_platform) {
+                    # some perls have an empty line after the summary line
+                    $in_summary = 0;
+                }
             } else {
                 my(%kv) = /\G,?\s*([^=]+)=('[^']+?'|\S+)/gc;
                 while (my($k,$v) = each %kv) {
