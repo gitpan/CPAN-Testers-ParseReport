@@ -1,3 +1,10 @@
+2009-11-01  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.6
+
+	* bugfix: not all reports have a correct MIME header; introduce
+	heuristics to parse MIME as MIME if it probably is.
+
 2009-10-26  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.5

@@ -30,7 +30,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.5');
+use version; our $VERSION = qv('0.1.6');
 
 =head1 SYNOPSIS
 
@@ -408,6 +408,30 @@ sub parse_distro {
     }
 }
 
+=head2 $bool = _looks_like_qp($raw_report)
+
+We had to acknowledge the fact that some MTAs swallow the MIME-Version
+header while passing MIME through. So we introduce fallback heuristics
+that try to determine if a report is written in quoted printable.
+
+Note that this subroutine is internal, just documented to have the
+internals documented.
+
+The current implementation counts the number of QP escaped spaces and
+equal signs.
+
+=cut
+
+sub _looks_like_qp {
+    my($report) = @_;
+    my $count_space = () = $report =~ /=20/g;
+    return 1 if $count_space > 12;
+    my $count_equal = () = $report =~ /=3D/g;
+    return 1 if $count_equal > 12;
+    return 1 if $count_space+$count_equal > 24;
+    return 0; # waiting for a counter example
+}
+
 =head2 $extract = parse_report($target,$dumpvars,%Opt)
 
 Reads one report. $target is the local filename to read. $dumpvars is
@@ -453,7 +477,10 @@ sub parse_report {
         $isHTML = $raw_report =~ /^</;
         if ($isHTML) {
             $report = decode_entities($raw_report);
-        } elsif ($raw_report =~ /^MIME-Version: 1.0$/m) {
+        } elsif ($raw_report =~ /^MIME-Version: 1.0$/m
+                 ||
+                 _looks_like_qp($raw_report)
+                ) {
             # minimizing MIME effort; don't know about reports in other formats
             $report = MIME::QuotedPrint::decode_qp($raw_report);
         } else {
@@ -996,9 +1023,18 @@ sub solve {
 }
 }
 
+# $variable is the name we pass through to S:R constructor
+# $regdata is hash and has the arrays "X" and "data" (observations)
+# X goes to S:R constructor
+# each observation has a Y which we pass to S:R in an include() call
+# $regression is the collector array of results
+# $opt are the options from outside, used to see if we are "verbose"
 sub _run_regression {
     my($variable,$regdata,$regression,$opt) = @_;
     my @X = @{$regdata->{X}};
+    # my $splo = $regdata->{"spliced-out"} = []; # maybe can be used to
+                                               # hold the reference
+                                               # group
     while (@X > 1) {
         my $reg = Statistics::Regression->new($variable,\@X);
         for my $obs (@{$regdata->{data}}) {
@@ -1022,7 +1058,9 @@ sub _run_regression {
                       errorstr => $@,
                      });
             }
-            # reduce k in case that linear dependencies disturbed us
+            # reduce k in case that linear dependencies disturbed us;
+            # often called reference group; I'm tempted to collect and
+            # make visible
             splice @X, 1, 1;
         } else {
             # $reg->print;

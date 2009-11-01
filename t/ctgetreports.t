@@ -122,6 +122,31 @@ my $plan;
 }
 
 {
+    BEGIN {
+        $plan += 3;
+    }
+    my $id = 5012315;
+    my %Opt = (
+               'q' => ["conf:nvsize", "conf:uselongdouble"],
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'conf:nvsize'}, 8, "found 8 on nvsize";
+    is $extract->{'conf:uselongdouble'}, 'undef', "found uselongdouble";
+    is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "makemaker version";
+}
+
+{
     BEGIN { $plan += 1 }
     open my $fh, "-|", qq{"$^X" "-Ilib" "bin/ctgetreports" "--local" "--cachedir" "t/var" "--solve" "--quiet" "Scriptalicious" 2>&1} or die "could not fork: $!";
     my @reg;
