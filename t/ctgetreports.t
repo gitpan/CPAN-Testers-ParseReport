@@ -248,6 +248,36 @@ my $plan;
 
 }
 
+{
+    BEGIN {
+        $plan += 8;
+    }
+    my $id = 5834678;
+    my %Opt = (
+               'q' => ["conf:nvsize", "conf:uselongdouble"],
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'conf:nvsize'}, 8, "report $id: found 8 on nvsize";
+    is $extract->{'conf:uselongdouble'}, 'undef', "report $id: found uselongdouble";
+    is $extract->{'mod:l module toolchain versions in'}, undef, "report $id: C:T:PR 0.1.6 had a bug against cpanplus 0.89_06";
+    is $extract->{'mod:CPANPLUS'}, '0.89_06', "report $id: CPANPLUS version";
+    is $extract->{'mod:Cwd'}, '3.2501', "report $id: Cwd version";
+    is $extract->{'mod:File::Spec'}, '3.2501', "report $id: File::Spec version";
+    is $extract->{'mod:version'}, '0.7701', "report $id: version version";
+    is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "report $id: ExtUtils::MakeMaker version";
+}
+
 unlink "ctgetreports.out";
 
 BEGIN {

@@ -30,7 +30,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.6');
+use version; our $VERSION = qv('0.1.7');
 
 =head1 SYNOPSIS
 
@@ -685,6 +685,12 @@ sub parse_report {
         }
         push @previous_line, $_;
         if ($expect_prereq || $expect_toolchain) {
+            if (/Perl module toolchain versions installed/) {
+                # first time discovered in CPANPLUS 0.89_06
+                $expecting_toolchain_soon = 1;
+                $expect_prereq=0;
+                next LINE;
+            }
             if (exists $moduleunpack->{type}) {
                 my($module,$v,$needwant);
                 # type 1 and 2 are about prereqs, type three about toolchain
@@ -729,6 +735,11 @@ sub parse_report {
                 if ($module) {
                     $v =~ s/^\s+//;
                     $v =~ s/\s+$//;
+                    my($modulename,$versionlead) = split " ", $module;
+                    if (defined $modulename and defined $versionlead) {
+                        $module = $modulename;
+                        $v = "$versionlead$v";
+                    }
                     if ($v eq "Have") {
                         next LINE;
                     }
@@ -764,7 +775,7 @@ sub parse_report {
             $expect_prereq=1;
         }
         if ($expecting_toolchain_soon) {
-            if (/(\s+)(Module\s+) Have/) {
+            if (/(\s+)(Module(?:\sName)?\s+) Have/) {
                 $in_env_context = 0;
                 $expect_toolchain=1;
                 $expecting_toolchain_soon=0;
