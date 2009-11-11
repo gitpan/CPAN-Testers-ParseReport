@@ -30,7 +30,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.7');
+use version; our $VERSION = qv('0.1.8');
 
 =head1 SYNOPSIS
 
@@ -717,8 +717,12 @@ sub parse_report {
                         $moduleunpack = {};
                         $expect_prereq = 0;
                         next LINE;
-                    } elsif ($v =~ /\s/) {
-                        ($module,$v) = split " ", $_;
+                    } elsif (!defined $v
+                             or !defined $needwant
+                             or $v =~ /\s/
+                             or $needwant =~ /\s/
+                            ) {
+                        ($module,$v,$needwant) = split " ", $_;
                     }
                 } elsif ($moduleunpack->{type} == 3) {
                     (my $leader,$module,$v) = eval { unpack $moduleunpack->{tpl}, $_; };
@@ -762,8 +766,8 @@ sub parse_report {
                 my $adjust_1 = 0;
                 my $adjust_2 = -length($4);
                 my $adjust_3 = length($4);
-                # two pass would be required to see where the
-                # columns really are. Or could we get away with split?
+                # I think they do not really try to align, usually we
+                # get away with split
                 $moduleunpack = {
                                  tpl => 'a'.length($1).'a'.(length($2)+$adjust_2).'a'.(length($3)+$adjust_3).'a*',
                                  type => 2,

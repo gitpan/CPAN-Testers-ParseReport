@@ -278,6 +278,34 @@ my $plan;
     is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "report $id: ExtUtils::MakeMaker version";
 }
 
+{
+    BEGIN {
+        $plan += 7;
+    }
+    my $id = 5928865;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'mod:Catalyst::Plugin::Session::State::Cookie'}, "0.17", "report $id: C:P:S:S:C version";
+    is $extract->{'mod:Catalyst::Controller::ActionRole'}, "0.12", "report $id: C:C:AR mod version";
+    is $extract->{'prereq:Catalyst::Controller::ActionRole'}, "0.12", "report $id: C:C:AR prereq version";
+    is $extract->{'mod:Moose::Autobox'}, "0.10", "report $id: M:A mod version";
+    is $extract->{'prereq:Moose::Autobox'}, "0.09", "report $id: M:A prereq version";
+    is $extract->{'mod:CPANPLUS'}, '0.89_07', "report $id: CPANPLUS version";
+    is $extract->{'mod:Cwd'}, '3.30', "report $id: Cwd version";
+}
+
 unlink "ctgetreports.out";
 
 BEGIN {
