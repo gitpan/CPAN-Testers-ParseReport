@@ -75,15 +75,16 @@ my $plan;
 
 {
     BEGIN {
-        $plan += 3;
+        $plan += 4;
     }
+    my $id = 3851138;
     my %Opt = (
                'q' => ["meta:perl", "meta:from", "mod:Storable", "env:AUTOMATED_TESTING"],
                'local' => 1,
                'cachedir' => 't/var',
                'quiet' => 1,
                'dumpvars' => ".",
-               'report' => '3851138',
+               'report' => $id,
               );
     my $dumpvars = {};
     my $extract = CPAN::Testers::ParseReport::parse_report
@@ -95,19 +96,21 @@ my $plan;
     like $extract->{'conf:archname'}, qr/64int/, "found 64int on archname";
     is $extract->{'env:AUTOMATED_TESTING'}, '1', "automated testing was set";
     is $extract->{'mod:Storable'}, '2.18', "Storable version";
+    is $extract->{'meta:date'}, '2009-05-10T01:39:11', "report $id: date";
 }
 
 {
     BEGIN {
-        $plan += 3;
+        $plan += 4;
     }
+    my $id = 5698506;
     my %Opt = (
                'q' => ["conf:nvsize", "conf:uselongdouble"],
                'local' => 1,
                'cachedir' => 't/var',
                'quiet' => 1,
                'dumpvars' => ".",
-               'report' => '5698506',
+               'report' => $id,
               );
     my $dumpvars = {};
     my $extract = CPAN::Testers::ParseReport::parse_report
@@ -119,11 +122,12 @@ my $plan;
     is $extract->{'conf:nvsize'}, 16, "found 16 on nvsize";
     is $extract->{'conf:uselongdouble'}, 'define', "found uselongdouble";
     is $extract->{'mod:ExtUtils::MakeMaker'}, '6.55_02', "makemaker version";
+    is $extract->{'meta:date'}, '2009-10-21T17:30:27', "report $id: date";
 }
 
 {
     BEGIN {
-        $plan += 3;
+        $plan += 4;
     }
     my $id = 5012315;
     my %Opt = (
@@ -144,6 +148,7 @@ my $plan;
     is $extract->{'conf:nvsize'}, 8, "found 8 on nvsize";
     is $extract->{'conf:uselongdouble'}, 'undef', "found uselongdouble";
     is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "makemaker version";
+    is $extract->{'meta:date'}, '2009-08-14T20:18:57', "report $id: date";
 }
 
 {
@@ -250,7 +255,7 @@ my $plan;
 
 {
     BEGIN {
-        $plan += 8;
+        $plan += 9;
     }
     my $id = 5834678;
     my %Opt = (
@@ -276,11 +281,12 @@ my $plan;
     is $extract->{'mod:File::Spec'}, '3.2501', "report $id: File::Spec version";
     is $extract->{'mod:version'}, '0.7701', "report $id: version version";
     is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "report $id: ExtUtils::MakeMaker version";
+    is $extract->{'meta:date'}, '2009-11-01T14:07:11', "report $id: date";
 }
 
 {
     BEGIN {
-        $plan += 7;
+        $plan += 8;
     }
     my $id = 5928865;
     my %Opt = (
@@ -304,6 +310,29 @@ my $plan;
     is $extract->{'prereq:Moose::Autobox'}, "0.09", "report $id: M:A prereq version";
     is $extract->{'mod:CPANPLUS'}, '0.89_07', "report $id: CPANPLUS version";
     is $extract->{'mod:Cwd'}, '3.30', "report $id: Cwd version";
+    is $extract->{'meta:date'}, '2009-11-08T14:48:26', "report $id: date";
+}
+
+{
+    BEGIN {
+        $plan += 1;
+    }
+    my $id = 2129076;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'meta:date'}, '2008-09-02T18:05:00', "report $id: date";
 }
 
 unlink "ctgetreports.out";

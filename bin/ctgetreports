@@ -1,4 +1,4 @@
-#!/usr/bin/perl -- -*- mode: cperl -*-
+#!/usr/bin/perl
 
 =head1 NAME
 
@@ -345,3 +345,7 @@ if (my $reports = delete $Opt{report}) {
 }
 
 __END__
+
+# Local Variables:
+# mode: cperl
+# End:

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               CPAN-Testers-ParseReport
-version:            0.1.8
+version:            0.1.9
 abstract:           parse reports to www.cpantesters.org from various sources
 author:  []
 license:            perl
@@ -10,8 +10,9 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
+    Class::ISA:           0
     Config::Perl::V:      0
-    DateTime::Format::DateParse:  0
+    DateTime:             0
     DateTime::Format::Strptime:  0
     File::Path:           0
     Getopt::Long:         0
@@ -32,12 +33,12 @@ requires:
 provides:
     CPAN::Testers::ParseReport:
         file:  lib/CPAN/Testers/ParseReport.pm
-        version:  0.1.8
+        version:  0.1.9
 no_index:
     directory:
         - t
         - inc
-generated_by:       ExtUtils::MakeMaker version 6.54
+generated_by:       ExtUtils::MakeMaker version 6.5503
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html
     version:  1.4

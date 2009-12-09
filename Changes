@@ -1,3 +1,16 @@
+2009-12-09  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.9
+
+	* replace DateTime::Format::DateParse with D:F:Strptime
+
+	* patch from Slaven Rezic to show reports after mime processing
+
+	* address #52550: move emacs stanza from shebang line to end (suggested
+	by Sean O'Rourke)
+
+	* fix typo in the compound config name "archname+osvers"
+
 2009-11-11  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.8

@@ -40,14 +40,19 @@ if ($ARGV[0] && $ARGV[0] eq "--setversion") {
     }};
 }
 
+my %indirect_dependencies =
+    (
+     'Class::ISA' => 0,
+     'DateTime'   => 0,
+    );
 WriteMakefile
     (
      'NAME' => 'CPAN::Testers::ParseReport',
      'VERSION_FROM' => $::version_from,
      'PREREQ_PM' => {
+                     %indirect_dependencies,
                      'Config::Perl::V'             => 0,
                      'DateTime::Format::Strptime'  => 0,
-                     'DateTime::Format::DateParse' => 0,
                      'File::Path'                  => 0,
                      'Getopt::Long'                => 0,
                      'HTML::Entities'              => 0,

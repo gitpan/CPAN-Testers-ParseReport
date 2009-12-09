@@ -5,7 +5,6 @@ use strict;
 
 use Config::Perl::V ();
 use DateTime::Format::Strptime;
-use DateTime::Format::DateParse;
 use File::Basename qw(basename);
 use File::Path qw(mkpath);
 use HTML::Entities qw(decode_entities);
@@ -30,7 +29,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.8');
+use version; our $VERSION = qv('0.1.9');
 
 =head1 SYNOPSIS
 
@@ -465,29 +464,7 @@ sub parse_report {
 
     my(%extract);
 
-    my($report,$isHTML);
-    if ($report = $Opt{article}) {
-        $isHTML = $report =~ /^</;
-        undef $target;
-    }
-    if ($target) {
-        open my $fh, $target or die "Could not open '$target': $!";
-        local $/;
-        my $raw_report = <$fh>;
-        $isHTML = $raw_report =~ /^</;
-        if ($isHTML) {
-            $report = decode_entities($raw_report);
-        } elsif ($raw_report =~ /^MIME-Version: 1.0$/m
-                 ||
-                 _looks_like_qp($raw_report)
-                ) {
-            # minimizing MIME effort; don't know about reports in other formats
-            $report = MIME::QuotedPrint::decode_qp($raw_report);
-        } else {
-            $report = $raw_report;
-        }
-        close $fh;
-    }
+    my($report,$isHTML) = _get_cooked_report($target, \%Opt);
     my @qr = map /^qr:(.+)/, @{$Opt{q}};
     if ($Opt{raw} || @qr) {
         for my $qr (@qr) {
@@ -598,19 +575,20 @@ sub parse_report {
                     ) {
                 my $date = $1;
                 my($dt);
-                if ($isHTML) {
-                    my $p;
-                    $p = DateTime::Format::Strptime->new(
-                                                         locale => "en",
-                                                         time_zone => "UTC",
-                                                         # April 13, 2005 23:50
-                                                         pattern => "%b %d, %Y %R",
-                                                        );
-                    $dt = $p->parse_datetime($date);
-                } else {
-                    # Sun, 28 Sep 2008 12:23:12 +0100 # but was not consistent
-                    # pattern => "%a, %d %b %Y %T %z",
-                    $dt = eval { DateTime::Format::DateParse->parse_datetime($date) };
+            DATEFMT: for my $pat ("%a, %d %b %Y %T %z", # Sun, 28 Sep 2008 12:23:12 +0100
+                                  "%b %d, %Y %R", # July 10,...
+                                  "%b  %d, %Y %R", # July  4,...
+                                 ) {
+                    $dt = eval {
+                        my $p = DateTime::Format::Strptime->new
+                            (
+                             locale => "en",
+                             time_zone => "UTC",
+                             pattern => $pat,
+                            );
+                        $p->parse_datetime($date)
+                    };
+                    last DATEFMT if $dt;
                 }
                 unless ($dt) {
                     warn "Could not parse date[$date], setting to epoch 0";
@@ -797,7 +775,7 @@ sub parse_report {
     if ($Opt{solve}) {
         $extract{id} = $id;
         if ($extract{"conf:osvers"} && $extract{"conf:archname"}) {
-            $extract{"conf:archame+osvers"} = join " ", @extract{"conf:archname","conf:osvers"};
+            $extract{"conf:archname+osvers"} = join " ", @extract{"conf:archname","conf:osvers"};
         }
         my $data = $dumpvars->{"==DATA=="} ||= [];
         push @$data, \%extract;
@@ -834,12 +812,11 @@ sub parse_report {
             );
         print STDERR "\n" unless $Opt{quiet};
         if ($ans eq "y") {
-            open my $ifh, "<", $target or die "Could not open $target: $!";
+	    my($report) = _get_cooked_report($target, \%Opt);
             $Opt{pager} ||= "less";
             open my $lfh, "|-", $Opt{pager} or die "Could not fork '$Opt{pager}': $!";
             local $/;
-            print {$lfh} <$ifh>;
-            close $ifh or die "Could not close $target: $!";
+            print {$lfh} $report;
             close $lfh or die "Could not close pager: $!"
         } elsif ($ans eq "q") {
             $Signal++;
@@ -847,6 +824,34 @@ sub parse_report {
         }
     }
     return \%extract;
+}
+
+sub _get_cooked_report {
+    my($target, $Opt_ref) = @_;
+    my($report, $isHTML);
+    if ($report = $Opt_ref->{article}) {
+        $isHTML = $report =~ /^</;
+        undef $target;
+    }
+    if ($target) {
+        open my $fh, $target or die "Could not open '$target': $!";
+        local $/;
+        my $raw_report = <$fh>;
+        $isHTML = $raw_report =~ /^</;
+        if ($isHTML) {
+            $report = decode_entities($raw_report);
+        } elsif ($raw_report =~ /^MIME-Version: 1.0$/m
+                 ||
+                 _looks_like_qp($raw_report)
+                ) {
+            # minimizing MIME effort; don't know about reports in other formats
+            $report = MIME::QuotedPrint::decode_qp($raw_report);
+        } else {
+            $report = $raw_report;
+        }
+        close $fh;
+    }
+    ($report, $isHTML);
 }
 
 =head2 solve
