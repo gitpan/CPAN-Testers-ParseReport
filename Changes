@@ -1,3 +1,12 @@
+2009-12-23  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.10
+
+	* if the summary at the end doesn't provide a perl version then use the
+	one from the first paragraph
+
+	* junk CARRIAGE RETURNs at end of line in time
+
 2009-12-09  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.9

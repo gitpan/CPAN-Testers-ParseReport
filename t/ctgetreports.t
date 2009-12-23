@@ -335,6 +335,51 @@ my $plan;
     is $extract->{'meta:date'}, '2008-09-02T18:05:00', "report $id: date";
 }
 
+{
+    BEGIN {
+        $plan += 1;
+    }
+    my $id = 6422067;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+               'q' => ['qr:(Failed test\s+\S+.*)'],
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'qr:(Failed test\s+\S+.*)'}, q{Failed test 'Pod coverage on App::Pm2Port'}, "report $id: qr...Failed test...";
+}
+
+{
+    BEGIN {
+        $plan += 1;
+    }
+    my $id = 6115651;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'meta:perl'}, q{5.11.2}, "report $id: meta:perl";
+}
+
 unlink "ctgetreports.out";
 
 BEGIN {
