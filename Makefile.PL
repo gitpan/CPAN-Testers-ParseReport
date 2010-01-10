@@ -56,6 +56,7 @@ WriteMakefile
                      'File::Path'                  => 0,
                      'Getopt::Long'                => 0,
                      'HTML::Entities'              => 0,
+                     'Hash::Util'                  => 0,
                      'IO::Prompt'                  => 0,
                      'LWP::UserAgent'              => 0,
                      'List::Util'                  => 0,

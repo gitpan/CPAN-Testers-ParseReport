@@ -380,6 +380,28 @@ my $plan;
     is $extract->{'meta:perl'}, q{5.11.2}, "report $id: meta:perl";
 }
 
+{
+    BEGIN {
+        $plan += 1;
+    }
+    my $id = 6525411;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'mod:Image::Imlib2'}, q{0}, "report $id: mod:Image::Imlib2";
+}
+
 unlink "ctgetreports.out";
 
 BEGIN {

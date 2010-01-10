@@ -279,6 +279,7 @@ use warnings;
 
 use CPAN::Testers::ParseReport;
 use Getopt::Long;
+use Hash::Util qw(lock_keys);
 use Pod::Usage qw(pod2usage);
 
 our %Opt;
@@ -286,6 +287,7 @@ my @opt = $optpod =~ /B<--(\S+)>/g;
 for (@opt) {
     $_ .= "!" unless /[+!=]/;
 }
+lock_keys %Opt, map { /([^=!\|]+)/ } @opt;
 
 GetOptions(\%Opt,
            @opt,

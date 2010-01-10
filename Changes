@@ -1,3 +1,10 @@
+2010-01-10  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.11
+
+	* CPANPLUS may paint an exclamation mark into the margin of the
+	prerequisties stanza
+
 2009-12-23  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.10
