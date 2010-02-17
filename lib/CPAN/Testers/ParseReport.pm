@@ -17,7 +17,7 @@ use XML::LibXML;
 use XML::LibXML::XPathContext;
 
 our $default_ctformat = "yaml";
-our $default_transport = "nntp";
+our $default_transport = "http_cpantesters";
 our $default_cturl = "http://www.cpantesters.org/show";
 our $Signal = 0;
 
@@ -29,12 +29,12 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.11');
+use version; our $VERSION = qv('0.1.12');
 
 =head1 SYNOPSIS
 
 The documentation in here is normally not needed because the code is
-meant to be run from a standalone program, L<ctgetreports>.
+meant to be run from the standalone program C<ctgetreports>.
 
   ctgetreports --q mod:Moose Devel-Events
 
@@ -46,8 +46,8 @@ want to look at L<ctgetreports> instead.
 
 =head1 OPTIONS
 
-Are described in the L<ctgetreports> manpage and are passed through to
-the functions unaltered.
+Options are described in the L<ctgetreports> manpage and are passed
+through to the functions unaltered.
 
 =head1 FUNCTIONS
 
@@ -82,6 +82,12 @@ $extract is the result of parse_report() described below.
              env_proxy => 1,
             );
         $ua->parse_head(0);
+
+        # I would love to support gzipped transfer but it doesn't seem
+        # to mix well with mirroring:
+
+        # $ua->default_header('Accept-Encoding' => scalar HTTP::Message::decodable());
+
         $ua;
     }
 }
@@ -305,8 +311,26 @@ sub parse_single_report {
                 }
                 open my $fh, ">", $target or die {severity=>1,text=>"Could not open >$target: $!"};
                 print $fh @$article;
-            } elsif ($Opt{transport} eq "http") {
+            } elsif ($Opt{transport} eq "http_nntp") {
                 my $resp = _ua->mirror("http://www.nntp.perl.org/group/perl.cpan.testers/$id",$target);
+                if ($resp->is_success) {
+                    if ($Opt{verbose}) {
+                        my(@stat) = stat $target;
+                        my $timestamp = gmtime $stat[9];
+                        print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
+                        if ($Opt{verbose} > 1) {
+                            print STDERR $resp->headers->as_string unless $Opt{quiet};
+                        }
+                    }
+                    my $headers = "$target.headers";
+                    open my $fh, ">", $headers or die {severity=>1,text=>"Could not open >$headers: $!"};
+                    print $fh $resp->headers->as_string;
+                } else {
+                    die {severity=>0,
+                             text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                }
+            } elsif ($Opt{transport} eq "http_cpantesters") {
+                my $resp = _ua->mirror("http://www.cpantesters.org/cgi-bin/pages.cgi?act=cpan-report&raw=1&id=$id",$target);
                 if ($resp->is_success) {
                     if ($Opt{verbose}) {
                         my(@stat) = stat $target;
@@ -443,10 +467,7 @@ Note: this parsing is a bit dirty but as it seems good enough I'm not
 inclined to change it. We parse HTML with regexps only, not an HTML
 parser. Only the entities are decoded.
 
-Update around version 0.0.17: switching to nntp now but keeping the
-parser for HTML around to read old local copies.
-
-Update around 0.0.18: In %Options you can use
+In %Opt you can use
 
     article => $some_full_article_as_scalar
 
@@ -785,8 +806,12 @@ sub parse_report {
         $extract{"meta:perl"} = $p5;
         $extract{"conf:git_describe"} = $patch if defined $patch;
     }
+    $extract{id} = $id;
+    if (my $filtercbbody = $Opt{filtercb}) {
+        my $filtercb = eval('sub {'.$filtercbbody.'}');
+        $filtercb->(\%extract);
+    }
     if ($Opt{solve}) {
-        $extract{id} = $id;
         if ($extract{"conf:osvers"} && $extract{"conf:archname"}) {
             $extract{"conf:archname+osvers"} = join " ", @extract{"conf:archname","conf:osvers"};
         }
@@ -799,7 +824,7 @@ sub parse_report {
         $qr = qr/$qr/;
         while (my($k,$v) = each %extract) {
             if ($k =~ $qr) {
-                $dumpvars->{$k}{$v}{$ok}++;
+                $dumpvars->{$k}{$v}{$extract{"meta:ok"}}++;
             }
         }
     }
@@ -807,7 +832,7 @@ sub parse_report {
         my $have  = $extract{$want} || "";
         $diag .= " $want\[$have]";
     }
-    printf STDERR " %-4s %8d%s\n", $ok, $id, $diag unless $Opt{quiet};
+    printf STDERR " %-4s %8d%s\n", $extract{"meta:ok"}, $id, $diag unless $Opt{quiet};
     if ($Opt{raw}) {
         $report =~ s/\s+\z//;
         print STDERR $report, "\n================\n" unless $Opt{quiet};
@@ -851,6 +876,12 @@ sub _get_cooked_report {
         local $/;
         my $raw_report = <$fh>;
         $isHTML = $raw_report =~ /^</;
+        if ($isHTML) {
+            if ($raw_report =~ m{^<\?.+?<html.+?<head.+?<body.+?<pre[^>]*>(.+)</pre>.*</body>.*</html>}s) {
+                $raw_report = decode_entities($1);
+                $isHTML = 0;
+            }
+        }
         if ($isHTML) {
             $report = decode_entities($raw_report);
         } elsif ($raw_report =~ /^MIME-Version: 1.0$/m

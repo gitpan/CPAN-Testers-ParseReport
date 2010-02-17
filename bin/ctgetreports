@@ -56,6 +56,25 @@ If dumpvars are specified, dump them into this file. Defaults to "ctgetreports.o
 Dump all queryable variables matching the regular expression given as
 argument at the end of the loop for a distro.
 
+=item B<--filtercb=s>
+
+A callback that is called at the end of parse_report(). It allows to
+manipulate the result, e.g. change the resulting values or add
+calculated values. The callback function gets a record (hashref) as
+the only argument. The return value is ignored. The callback is pure
+perl code without any surrounding sub declaration.
+
+Compared to the C<--ycb> callback described below C<--filtercb> is
+considered easier to use.
+
+The following example excludes reports by the user C<jack.blacksmoke>
+from regression testing:
+
+  ctgetreport --q --solve --filtercb '
+    my $rec = shift;
+    $rec->{"meta:ok"}="FILTERED" if $rec->{"meta:from"} =~ /jack.blacksmoke/;
+    ' String-RewritePrefix-0.005
+
 =item B<--help|h>
 
 Prints a brief message and exists.
@@ -83,7 +102,7 @@ stands for the following additional options:
   -q qr:(Failed test\s+\S+.*)
   -q qr:(Failed to load .*)
   -q qr:(Can't load .*)
-  -q qr:(.*could not find.*)
+  -q qr:((?i:.*could.?n.t find.*))
   -q qr:(Can't locate object method .+)
   -q qr:(Can't locate \S+pm)
   -q qr:(Please\s+install\s+\S+)
@@ -147,7 +166,9 @@ to display.
 =item B<--transport=s>
 
 Specifies transport to get the reports. C<nntp> uses Net::NNTP,
-C<http> uses LWP::UserAgent. Defaults to nntp.
+C<http_nntp> uses LWP::UserAgent at nntp.perl.org, C<http_cpantesters>
+uses LWP::UserAgent at www.cpantesters.org. Defaults to
+C<http_cpantesters>.
 
 =item B<--vdistro=s>
 
@@ -336,7 +357,14 @@ $|=1;
 if (my $reports = delete $Opt{report}) {
     my $dumpvars = {};
  REPORT: for my $report (@$reports) {
-        CPAN::Testers::ParseReport::parse_single_report({id => $report},$dumpvars,%Opt);
+        my $extract = eval { CPAN::Testers::ParseReport::parse_single_report({id => $report},$dumpvars,%Opt) };
+        if ($@) {
+            if (ref $@) {
+                warn "Warning: error while parsing '$report': $@->{text}";
+            } else {
+                warn "Alert: error while parsing '$report': $@";
+            }
+        }
         last REPORT if $CPAN::Testers::ParseReport::Signal;
     }
     my $dumpfile = $Opt{dumpfile} || "ctgetreports.out";
