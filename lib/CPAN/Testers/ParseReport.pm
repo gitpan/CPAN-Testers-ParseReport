@@ -29,7 +29,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.12');
+use version; our $VERSION = qv('0.1.13');
 
 =head1 SYNOPSIS
 
@@ -522,9 +522,14 @@ sub parse_report {
     my @previous_line = ""; # so we can neutralize line breaks
     my @rlines = split /\r?\n/, $report;
  LINE: for (@rlines) {
-        next LINE unless ($isHTML ? m/<title>(\S+)\s+(\S+)/ : m/^Subject:\s*(\S+)\s+(\S+)/);
-        $ok = $1;
-        $about = $2;
+        $DB::single++;
+        next LINE unless ($isHTML ? m/<title>((\S+)\s+(\S+))/ : m/^Subject:\s*((\S+)\s+(\S+))/);
+        my $s = $1;
+        $s = $1 if $s =~ m{<strong>(.+)};
+        if ($s =~ /(\S+)\s+(\S+)/) {
+            $ok = $1;
+            $about = $2;
+        }
         $extract{"meta:ok"}    = $ok;
         $extract{"meta:about"} = $about;
         last;
@@ -585,7 +590,9 @@ sub parse_report {
                      m|<div class="h_name">From:</div> <b>(.+?)</b><br/>| :
                      m|^From:\s*(.+)|
                     ) {
-                $extract{"meta:from"} = $1;
+                my $f = $1;
+                $f = $1 if $f =~ m{<strong>(.+)</strong>};
+                $extract{"meta:from"} = $f;
             }
             $extract{"meta:from"} =~ s/\.$// if $extract{"meta:from"};
         }
@@ -596,8 +603,10 @@ sub parse_report {
                      m|^Date:\s*(.+)|
                     ) {
                 my $date = $1;
+                $date = $1 if $date =~ m{<strong>(.+)</strong>};
                 my($dt);
-            DATEFMT: for my $pat ("%a, %d %b %Y %T %z", # Sun, 28 Sep 2008 12:23:12 +0100
+            DATEFMT: for my $pat ("%Y-%m-%dT%TZ", # 2010-07-07T14:01:40Z
+                                  "%a, %d %b %Y %T %z", # Sun, 28 Sep 2008 12:23:12 +0100
                                   "%b %d, %Y %R", # July 10,...
                                   "%b  %d, %Y %R", # July  4,...
                                  ) {

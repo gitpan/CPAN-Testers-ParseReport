@@ -1,3 +1,9 @@
+2010-07-10  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.13
+
+	* parse the new cpantesters 2.0 raw page now with <strong> tag
+
 2010-02-17  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.12
