@@ -138,6 +138,15 @@ Example: C<--report 1238673>
 If report is set and dumpvars is not set, dumpvars will be set to a
 dot (meaning that all variables shall be dumped into dumpfile).
 
+=item B<--sample=i>
+
+Limit the number of reports to be analyzed. If the total number of
+reports is lower than or equal to the value specifed here then the
+option is ignored and all available reports will be used. Only if the
+total number of reports is larger than specified then the number of
+reports will be sampled randomly to the demanded sample size. Useful
+to limit the computing power needed for a result.
+
 =item B<--solve!>
 
 Calls the solve function which tries to identify the best contenders

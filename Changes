@@ -1,3 +1,9 @@
+2010-08-08  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.14
+
+	* support for new option --sample to limit number of observations
+
 2010-07-10  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.13

@@ -29,7 +29,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.13');
+use version; our $VERSION = qv('0.1.14');
 
 =head1 SYNOPSIS
 
@@ -404,7 +404,20 @@ sub parse_distro {
         }
     }
     return unless $reports;
-    for my $report (@$reports) {
+    my $sampled = 0;
+    my $i = 0;
+    my $samplesize = $Opt{sample} || 0;
+    $samplesize = 0 if $samplesize && $samplesize >= @$reports;
+ REPORT: for my $report (@$reports) {
+        $i++;
+        if ($samplesize) {
+            my $need = $samplesize - $sampled;
+            next REPORT unless $need;
+            my $left = @$reports - $i;
+            # warn sprintf "tot %d i %d sampled %d need %d left %d\n", scalar @$reports, $i, $sampled, $need, $left;
+            my $want_this = (rand(1) <= ($need/$left));
+            next REPORT unless $want_this;
+        }
         eval {parse_single_report($report, \%dumpvars, %Opt)};
         if ($@) {
             if (ref $@) {
@@ -417,6 +430,7 @@ sub parse_distro {
                 die $@;
             }
         }
+        $sampled++;
         last if $Signal;
     }
     if ($Opt{dumpvars}) {

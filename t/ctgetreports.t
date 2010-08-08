@@ -51,6 +51,50 @@ my $plan;
 
 {
     BEGIN {
+        $plan += 1;
+    }
+    my %Opt = (
+               'q' => ["meta:perl", "meta:from", "prereq:Test::More"],
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'sample' => 99,
+              );
+    CPAN::Testers::ParseReport::parse_distro
+          (
+           "Scriptalicious",
+           %Opt,
+          );
+    my $Y = YAML::Syck::LoadFile("ctgetreports.out");
+    my $count = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
+    is($count, 99, "found $count==99 reports via meta:from");
+}
+
+{
+    BEGIN {
+        $plan += 1;
+    }
+    my %Opt = (
+               'q' => ["meta:perl", "meta:from", "prereq:Test::More"],
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'sample' => 999,
+              );
+    CPAN::Testers::ParseReport::parse_distro
+          (
+           "Scriptalicious",
+           %Opt,
+          );
+    my $Y = YAML::Syck::LoadFile("ctgetreports.out");
+    my $count = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
+    is($count, 130, "found $count==130 reports via meta:from");
+}
+
+{
+    BEGIN {
         $plan += 3;
     }
     my %Opt = (
