@@ -29,7 +29,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.14');
+use version; our $VERSION = qv('0.1.15');
 
 =head1 SYNOPSIS
 
@@ -729,6 +729,7 @@ sub parse_report {
                         next LINE;
                     } elsif ($leader =~ /^(
                                          buil          # build_requires:
+                                         |conf         # configure_requires:
                                         )/x) {
                         next LINE;
                     } elsif ($module =~ /^(

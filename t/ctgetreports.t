@@ -446,6 +446,29 @@ my $plan;
     is $extract->{'mod:Image::Imlib2'}, q{0}, "report $id: mod:Image::Imlib2";
 }
 
+{
+    BEGIN {
+        $plan += 2;
+    }
+    my $id = 8327429;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'prereq:Module::Build'}, q{0.36}, "report $id: prereq:Module::Build";
+    is $extract->{'mod:Module::Build'}, q{0.36_13}, "report $id: mod:Module::Build";
+}
+
 unlink "ctgetreports.out";
 
 BEGIN {

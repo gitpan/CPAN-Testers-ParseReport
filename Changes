@@ -1,3 +1,9 @@
+2010-08-26  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.15
+
+	* fix parsing bug with configure_requires
+
 2010-08-08  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.14
