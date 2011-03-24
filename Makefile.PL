@@ -61,7 +61,6 @@ WriteMakefile
                      'LWP::UserAgent'              => 0,
                      'List::Util'                  => 0,
                      'MIME::QuotedPrint'           => 3.07,
-                     'Net::NNTP'                   => 2.24,
                      'Pod::Usage'                  => 1.33,
                      'Statistics::Regression'      => 0,
                      'Test::More'                  => 0,

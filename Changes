@@ -1,3 +1,11 @@
+2011-03-24  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.16
+
+	* add compression support for fetched and cached cpan testers reports
+
+	* rip out nntp support, the nntp server has closed its gates in 2010
+
 2010-08-26  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.15

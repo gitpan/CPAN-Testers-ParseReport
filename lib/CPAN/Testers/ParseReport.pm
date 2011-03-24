@@ -11,7 +11,6 @@ use HTML::Entities qw(decode_entities);
 use LWP::UserAgent;
 use List::Util qw(max min sum);
 use MIME::QuotedPrint ();
-use Net::NNTP ();
 use Time::Local ();
 use XML::LibXML;
 use XML::LibXML::XPathContext;
@@ -29,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.15');
+use version; our $VERSION = qv('0.1.16');
 
 =head1 SYNOPSIS
 
@@ -89,16 +88,6 @@ $extract is the result of parse_report() described below.
         # $ua->default_header('Accept-Encoding' => scalar HTTP::Message::decodable());
 
         $ua;
-    }
-}
-
-{
-    my $nntp;
-    sub _nntp {
-        return $nntp if $nntp;
-        $nntp = Net::NNTP->new("nntp.perl.org");
-        $nntp->group("perl.cpan.testers");
-        return $nntp;
     }
 }
 
@@ -304,15 +293,9 @@ sub parse_single_report {
         if (! -e $target) {
             print STDERR "Fetching $target..." if $Opt{verbose} && !$Opt{quiet};
             $Opt{transport} ||= $default_transport;
-            if ($Opt{transport} eq "nntp") {
-                my $article = _nntp->article($id);
-                unless ($article) {
-                    die {severity=>0,text=>"NNTP-Server did not return an article for id[$id]"};
-                }
-                open my $fh, ">", $target or die {severity=>1,text=>"Could not open >$target: $!"};
-                print $fh @$article;
-            } elsif ($Opt{transport} eq "http_nntp") {
-                my $resp = _ua->mirror("http://www.nntp.perl.org/group/perl.cpan.testers/$id",$target);
+            if (0) {
+            } elsif ($Opt{transport} eq "http_cpantesters") {
+                my $resp = _ua->mirror("http://www.cpantesters.org/cgi-bin/pages.cgi?act=cpan-report&raw=1&id=$id",$target);
                 if ($resp->is_success) {
                     if ($Opt{verbose}) {
                         my(@stat) = stat $target;
@@ -329,7 +312,10 @@ sub parse_single_report {
                     die {severity=>0,
                              text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
                 }
-            } elsif ($Opt{transport} eq "http_cpantesters") {
+            } elsif ($Opt{transport} eq "http_cpantesters_gzip") {
+                if (-e "$target.gz") {
+                    0 == system gunzip => $target or die;
+                }
                 my $resp = _ua->mirror("http://www.cpantesters.org/cgi-bin/pages.cgi?act=cpan-report&raw=1&id=$id",$target);
                 if ($resp->is_success) {
                     if ($Opt{verbose}) {
@@ -343,6 +329,7 @@ sub parse_single_report {
                     my $headers = "$target.headers";
                     open my $fh, ">", $headers or die {severity=>1,text=>"Could not open >$headers: $!"};
                     print $fh $resp->headers->as_string;
+                    0 == system gzip => $target or die;
                 } else {
                     die {severity=>0,
                              text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
@@ -536,7 +523,6 @@ sub parse_report {
     my @previous_line = ""; # so we can neutralize line breaks
     my @rlines = split /\r?\n/, $report;
  LINE: for (@rlines) {
-        $DB::single++;
         next LINE unless ($isHTML ? m/<title>((\S+)\s+(\S+))/ : m/^Subject:\s*((\S+)\s+(\S+))/);
         my $s = $1;
         $s = $1 if $s =~ m{<strong>(.+)};
@@ -547,6 +533,13 @@ sub parse_report {
         $extract{"meta:ok"}    = $ok;
         $extract{"meta:about"} = $about;
         last;
+    }
+    unless ($extract{"meta:about"}) {
+        $extract{"meta:about"} = $Opt{vdistro};
+        unless ($extract{"meta:ok"}) {
+            $DB::single++;
+            warn "Warning: could not determine state of report";
+        }
     }
  LINE: while (@rlines) {
         $_ = shift @rlines;
@@ -896,7 +889,15 @@ sub _get_cooked_report {
         undef $target;
     }
     if ($target) {
-        open my $fh, $target or die "Could not open '$target': $!";
+        my $fh;
+        if (0) {
+        } elsif (-e $target) {
+            open $fh, '<', $target or die "Could not open '$target': $!";
+        } elsif (-e "$target.gz") {
+            open $fh, "-|", "zcat", $target or die "Could not open '$target.gz': $!";
+        } else {
+            die "Could not find '$target' or '$target.gz'";
+        }
         local $/;
         my $raw_report = <$fh>;
         $isHTML = $raw_report =~ /^</;
