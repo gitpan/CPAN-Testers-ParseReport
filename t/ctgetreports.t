@@ -469,6 +469,99 @@ my $plan;
     is $extract->{'mod:Module::Build'}, q{0.36_13}, "report $id: mod:Module::Build";
 }
 
+{
+    BEGIN {
+        $plan += 2;
+    }
+    my $id = 1678737;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'env:$UID'}, q{1005}, "report $id: UID=1005";
+    is $extract->{'env:$GID'}, q{1005 1005}, "report $id: GID=1005 1005";
+}
+
+{
+    BEGIN {
+        $plan += 2;
+    }
+    my $id = 1425132;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'env:$UID'}, q{1002}, "report $id: UID=1002";
+    is $extract->{'env:$GID'}, q{100 100}, "report $id: GID=100 100";
+}
+
+{
+    BEGIN {
+        $plan += 2;
+    }
+    my $id = 3521214;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'env:$UID'}, q{502}, "report $id: UID=502";
+    is $extract->{'env:$GID'}, q{502 502}, "report $id: GID=502 502";
+}
+
+{
+    BEGIN {
+        $plan += 3;
+    }
+    my $id = 5834678;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'env:$UID'}, q{1001}, "report $id: UID=1001";
+    is $extract->{'env:$GID'}, q{1001 1001 1001}, "report $id: GID=1001 1001 1001";
+    is $extract->{'env:$^X'}, q{/usr/home/cpan/pit/bare/perl-5.10.0/bin/perl}, "report $id: \$^X=/usr/home/cpan/pit/bare/perl-5.10.0/bin/perl";
+}
+
 unlink "ctgetreports.out";
 
 BEGIN {

@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.16');
+use version; our $VERSION = qv('0.1.17');
 
 =head1 SYNOPSIS
 
@@ -698,8 +698,30 @@ sub parse_report {
             }
         }
         if ($in_env_context) {
-            if (/^\s{4}(\S+)\s*=\s*(.*)$/) {
-                $extract{"env:$1"} = $2;
+            if ($extract{"meta:writer"} =~ /^CPANPLUS\b/
+                ||
+                exists $extract{"env:PERL5_CPANPLUS_IS_VERSION"}
+               ) {
+                (
+                 s/Perl:\s+\$\^X/\$^X/
+                 ||
+                 s/EUID:\s+\$>/\$EUID/
+                 ||
+                 s/UID:\s+\$</\$UID/
+                 ||
+                 s/EGID:\s+\$\)/\$EGID/
+                 ||
+                 s/GID:\s+\$\(/\$GID/
+                )
+            }
+            if (my($left,$right) = /^\s{4}(\S+)\s*=\s*(.*)$/) {
+                if ($left eq '$UID/$EUID') {
+                    my($uid,$euid) = split m{\s*/\s*}, $right;
+                    $extract{'env:$UID'} = $uid;
+                    $extract{'env:$EUID'} = $euid;
+                } else {
+                    $extract{"env:$left"} = $right;
+                }
             }
         }
         push @previous_line, $_;
@@ -956,7 +978,6 @@ code for details.
          'env:$^X',
          'env:$EGID',
          'env:$GID',
-         'env:$UID/$EUID',
          'env:PERL5_CPANPLUS_IS_RUNNING',
          'env:PERL5_CPAN_IS_RUNNING',
          'env:PERL5_CPAN_IS_RUNNING_IN_RECURSION',

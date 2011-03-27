@@ -14,24 +14,24 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 bb08048283deb82d8f572384211274e0e2c03ad6 Changes
+SHA1 dce1a835bdb1fb8110ad056a3c3ca684c1c1c110 Changes
 SHA1 657cbdab74543ba20891dd9b31ae97aeec4b12a5 MANIFEST
 SHA1 26f9ec5bed63c96d99c3c601bafe6722e0fa49cc MANIFEST.SKIP
-SHA1 fdceddc62531c999f47a2d44bca502c417eadda6 META.yml
+SHA1 f943b70cae41fa9f059ed2bd26287b165b8afb89 META.yml
 SHA1 0da3422d65ed79b4d2e1eb2885ab2b3f834e716a Makefile.PL
 SHA1 af348ab0f2fa69ad7dd041744d3fc4c1674acf88 README
 SHA1 75e051bd856dd73b1ac2ca54d910d4f00dc49fbe TODO
 SHA1 8b53bdb4632531b3598bfcafd87a3de4537e13fe bin/conf2conf.pl
 SHA1 fb8e1df5115a03a9a48f4de87017cbf3436946e6 bin/ctgetreports
 SHA1 ba9b408017070abf10118cff7b92a5f0ee5aec08 bin/ctsolvereports
-SHA1 00369bf3d6bbb900f38fdfa0d24d5a57541811ee lib/CPAN/Testers/ParseReport.pm
+SHA1 09ae56b4b9ec5699c994ffa752c3314a43f2f1cf lib/CPAN/Testers/ParseReport.pm
 SHA1 6236447d69c01e46adef7a159470de3dab3cea73 lib/CPAN/Testers/ParseReport/catalog
 SHA1 f9b739ae2d1b7fbe44edf6fa1f8e72b484cedb5c lib/CPAN/Testers/ParseReport/catalog.dtd
 SHA1 223952bb81d253cf4cdac18e88b5513ea14fe824 lib/CPAN/Testers/ParseReport/loose.dtd
 SHA1 5ad053b310743766a9cf3bf6e7090c97d6bdfb66 lib/CPAN/Testers/ParseReport/xhtml1-transitional.dtd
 SHA1 a1ea507fdde0592c088373182ba28edf0a2a4467 t/00-load.t
 SHA1 ac2a1155ee576a6742231d3745e75698044e2408 t/01-metayaml.t
-SHA1 b8aa05badebedb636eb725af750d5d61fa5bbb4c t/ctgetreports.t
+SHA1 b4d48a3563643218ae4872aee20671037988919e t/ctgetreports.t
 SHA1 0b1c5a2d59be6bfa7d60c64cd964fea6a0331705 t/pod-coverage.t
 SHA1 640935336dc1123c0069bcf5432bcaedc2cf22d3 t/pod.t
 SHA1 dc81efbf47d931f84070d06f36eec909b25fbd03 t/run.t
@@ -179,7 +179,7 @@ SHA1 25d73b8cf20feb02cfdbfb9f1a408dc4fac3cbcb t/var/nntp-testers/8327429
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iEYEARECAAYFAk2K9zUACgkQ7IA58KMXwV2CYQCfWRRvfwJCavIrF+syN0d3gQys
-94kAnAvvF5Y8Zc0vt0j9gz1DKIFHbMxZ
-=fHkA
+iEYEARECAAYFAk2PPuUACgkQ7IA58KMXwV3nFwCgipWLbOZjNSuf+g2iSLiXyHjO
+ig4An0jTEzT9pXoUxNmYkpkg1wO+l6ol
+=2UXM
 -----END PGP SIGNATURE-----

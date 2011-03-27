@@ -1,3 +1,11 @@
+2011-03-27  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.17
+
+	* fix misparsing of UID, EUID, GID, EGID, and $^X under CPANPLUS
+
+	* fix misparsing of UID and EUID under CPAN::Reporter
+
 2011-03-24  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.16

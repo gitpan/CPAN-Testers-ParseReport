@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               CPAN-Testers-ParseReport
-version:            0.1.16
+version:            0.1.17
 abstract:           parse reports to www.cpantesters.org from various sources
 author:  []
 license:            perl
@@ -33,7 +33,7 @@ requires:
 provides:
     CPAN::Testers::ParseReport:
         file:  lib/CPAN/Testers/ParseReport.pm
-        version:  0.1.16
+        version:  0.1.17
 no_index:
     directory:
         - t
