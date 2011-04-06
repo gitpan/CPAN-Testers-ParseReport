@@ -45,31 +45,57 @@ my %indirect_dependencies =
      'Class::ISA' => 0,
      'DateTime'   => 0,
     );
-WriteMakefile
+my %interesting_modules;
+for my $m (qw(
+    CPAN::Meta::Converter
+    CPAN::Meta::YAML
+    File::Spec
+    JSON::PP
+    Parse::CPAN::Meta
+    version
+    )){
+    eval "require $m";
+    if (!$@) {
+        $interesting_modules{$m} = $m->VERSION;
+    }
+}
+
+my $prereq_pm =
+    {
+     'Config::Perl::V'             => 0,
+     'DateTime::Format::Strptime'  => 0,
+     'File::Path'                  => 1.08,
+     'Getopt::Long'                => 0,
+     'HTML::Entities'              => 0,
+     'Hash::Util'                  => 0,
+     'IO::Prompt'                  => 0,
+     'LWP::UserAgent'              => 0,
+     'List::Util'                  => 0,
+     'MIME::QuotedPrint'           => 3.07,
+     'Pod::Usage'                  => 1.33,
+     'Statistics::Regression'      => 0,
+     'Test::More'                  => 0,
+     'Test::Pod'                   => 0,
+     'Time::Local'                 => 1.11,
+     'XML::LibXML'                 => 0,
+     'XML::LibXML::XPathContext'   => 0,
+     'YAML::Syck'                  => 0,
+    };
+# intentionally avoiding any size comparisons, trying to catch
+# interesting cases that happen during WriteMakefile, like
+# http://www.cpantesters.org/cpan/report/e1942da8-5fcc-11e0-994f-224f8e2a057c
+while (my($k,$v) = each %interesting_modules) {
+    $prereq_pm->{$k} ||= $v;
+}
+while (my($k,$v) = each %indirect_dependencies) {
+    $prereq_pm->{$k} ||= $v;
+}
+
+eval { WriteMakefile
     (
      'NAME' => 'CPAN::Testers::ParseReport',
      'VERSION_FROM' => $::version_from,
-     'PREREQ_PM' => {
-                     %indirect_dependencies,
-                     'Config::Perl::V'             => 0,
-                     'DateTime::Format::Strptime'  => 0,
-                     'File::Path'                  => 1.08,
-                     'Getopt::Long'                => 0,
-                     'HTML::Entities'              => 0,
-                     'Hash::Util'                  => 0,
-                     'IO::Prompt'                  => 0,
-                     'LWP::UserAgent'              => 0,
-                     'List::Util'                  => 0,
-                     'MIME::QuotedPrint'           => 3.07,
-                     'Pod::Usage'                  => 1.33,
-                     'Statistics::Regression'      => 0,
-                     'Test::More'                  => 0,
-                     'Test::Pod'                   => 0,
-                     'Time::Local'                 => 1.11,
-                     'XML::LibXML'                 => 0,
-                     'XML::LibXML::XPathContext'   => 0,
-                     'YAML::Syck'                  => 0,
-                    },
+     'PREREQ_PM' => $prereq_pm,
      'INSTALLDIRS' => 'site',
      'EXE_FILES' => [
                      'bin/ctgetreports',
@@ -97,6 +123,13 @@ WriteMakefile
                    }) : ()),
      @sign,
     );
+   };
+if (my $err = $@) {
+    while (my($k,$v) = each %interesting_modules) {
+        warn "Found $k version $v\n";
+    }
+    die $err;
+}
 
 if ($version_diff){
   die "
