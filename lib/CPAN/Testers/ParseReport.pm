@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.18');
+use version; our $VERSION = qv('0.1.19');
 
 =head1 SYNOPSIS
 

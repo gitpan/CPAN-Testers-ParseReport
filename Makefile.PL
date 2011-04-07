@@ -44,10 +44,10 @@ my %indirect_dependencies =
     (
      'Class::ISA' => 0,
      'DateTime'   => 0,
+     'CPAN::Meta::Converter' => '2.110440',
     );
 my %interesting_modules;
 for my $m (qw(
-    CPAN::Meta::Converter
     CPAN::Meta::YAML
     File::Spec
     JSON::PP
@@ -64,19 +64,19 @@ my $prereq_pm =
     {
      'Config::Perl::V'             => 0,
      'DateTime::Format::Strptime'  => 0,
-     'File::Path'                  => 1.08,
+     'File::Path'                  => '1.08',
      'Getopt::Long'                => 0,
      'HTML::Entities'              => 0,
      'Hash::Util'                  => 0,
      'IO::Prompt'                  => 0,
      'LWP::UserAgent'              => 0,
      'List::Util'                  => 0,
-     'MIME::QuotedPrint'           => 3.07,
-     'Pod::Usage'                  => 1.33,
+     'MIME::QuotedPrint'           => '3.07',
+     'Pod::Usage'                  => '1.33',
      'Statistics::Regression'      => 0,
      'Test::More'                  => 0,
      'Test::Pod'                   => 0,
-     'Time::Local'                 => 1.11,
+     'Time::Local'                 => '1.11',
      'XML::LibXML'                 => 0,
      'XML::LibXML::XPathContext'   => 0,
      'YAML::Syck'                  => 0,
