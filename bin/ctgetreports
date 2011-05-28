@@ -43,9 +43,7 @@ being.
 =item B<--cturl=s>
 
 Base URL of the cpantesters website. Defaults to
-C<http://www.cpantesters.org/show> but sometimes it is interesting to set
-it to the old URL, C<http://cpantesters.perl.org/show> to diagnose bugs
-or whatever.
+C<http://static.cpantesters.org/show>.
 
 =item B<--dumpfile=s>
 
@@ -176,10 +174,10 @@ to display.
 
 Specifies transport to get the reports. Defaults to C<http_cpantesters>.
 
-C<http_cpantesters> uses LWP::UserAgent at www.cpantesters.org.
+C<http_cpantesters> uses LWP::UserAgent at static.cpantesters.org.
 
 C<http_cpantesters_gzip> also uses LWP::UserAgent at
-www.cpantesters.org but compresses the fetched result after fetching
+static.cpantesters.org but compresses the fetched result after fetching
 and decompresses cached results before mirroring. This optione
 requires that the external programs C<gzip>,C<gunzip>, and C<zcat> are
 installed on the system.

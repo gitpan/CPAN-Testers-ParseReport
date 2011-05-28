@@ -18,11 +18,8 @@ if ($ARGV[0] && $ARGV[0] eq "--setversion") {
     unless (-f $makefile) {
         die "no Makefile and no Makefile.old found";
     }
-    my $dirty = ! system "git status -a > /dev/null";
-    if ($dirty){
-        system "git status -a";
-        die "Not everything checked in?";
-    }
+    my $dirty = `git status --porcelain --untracked-files=no`;
+    die "Not everything checked in or out?\n====\n$dirty====\n" if $dirty;
     open my $fh, "make -f $makefile the-release-name|" or die "Could not fork: $!";
     local $/;
     my ($have_version) = <$fh> =~ /^version\s+([\d\._]+)/m;
@@ -140,6 +137,12 @@ if ($version_diff){
 }
 
 package MY;
+sub distsignature {
+    my($self) = shift;
+    my $ret = $self->SUPER::distsignature_target(@_);
+    $ret =~ s|cpansign|\`dirname \$(PERL)\`/cpansign|g;
+    return $ret;
+}
 sub postamble {
   my @m;
   push @m, q{
@@ -173,7 +176,7 @@ release :: disttest
 	rm -rf $(DISTVNAME)
 
 sign:
-	cpansign -s
+	`dirname $(PERL)`/cpansign -s
 };
   join "", @m;
 }

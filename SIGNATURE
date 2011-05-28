@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.66.
+signed via the Module::Signature module, version 0.68.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -14,17 +14,17 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 0c00d56f2d1225fcd48fc860782d2d8da414cca8 Changes
+SHA1 9c300e2b68fc09561467885c09eb7f68af1d74fd Changes
 SHA1 657cbdab74543ba20891dd9b31ae97aeec4b12a5 MANIFEST
 SHA1 26f9ec5bed63c96d99c3c601bafe6722e0fa49cc MANIFEST.SKIP
-SHA1 592cb2c827a534e08f0df496f658d81456c9b0b7 META.yml
-SHA1 29f23258ffcec200eab884cdf81eb4bbd1052358 Makefile.PL
+SHA1 964265733d3dc50da90c9fe0c93755ed4286f9a9 META.yml
+SHA1 fab21a94f45849e54f4618606e1bcd209b567939 Makefile.PL
 SHA1 af348ab0f2fa69ad7dd041744d3fc4c1674acf88 README
 SHA1 75e051bd856dd73b1ac2ca54d910d4f00dc49fbe TODO
 SHA1 8b53bdb4632531b3598bfcafd87a3de4537e13fe bin/conf2conf.pl
-SHA1 fb8e1df5115a03a9a48f4de87017cbf3436946e6 bin/ctgetreports
+SHA1 fe651bdc945c2b13f29d9da20b5e5e7c8e44db86 bin/ctgetreports
 SHA1 ba9b408017070abf10118cff7b92a5f0ee5aec08 bin/ctsolvereports
-SHA1 debf127c8d5ee98c53cf1461277db9168dcacb3c lib/CPAN/Testers/ParseReport.pm
+SHA1 5ab9add7cb6ba0d72c641da1e6a91e753617e4fd lib/CPAN/Testers/ParseReport.pm
 SHA1 6236447d69c01e46adef7a159470de3dab3cea73 lib/CPAN/Testers/ParseReport/catalog
 SHA1 f9b739ae2d1b7fbe44edf6fa1f8e72b484cedb5c lib/CPAN/Testers/ParseReport/catalog.dtd
 SHA1 223952bb81d253cf4cdac18e88b5513ea14fe824 lib/CPAN/Testers/ParseReport/loose.dtd
@@ -177,9 +177,9 @@ SHA1 7a6197f367308f16ede8ce587f241bb45cb1c05c t/var/nntp-testers/6422067
 SHA1 6bad95bc04c7bc66dd908a59f96ecf69535997c7 t/var/nntp-testers/6525411
 SHA1 25d73b8cf20feb02cfdbfb9f1a408dc4fac3cbcb t/var/nntp-testers/8327429
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAk2dW1gACgkQ7IA58KMXwV0n/wCdH5yGsC6zee/KxaYv5TJyWWe2
-8coAn0URU/S3hiMS6OFUKnQ2YVwTyM4k
-=w+e7
+iEYEARECAAYFAk3giGQACgkQ7IA58KMXwV3JRwCg1KFpzublwkehP0z69qF5IPDJ
+wA8An3gx5PNLyWaWRSGh5F50xGeWwhCx
+=WS8s
 -----END PGP SIGNATURE-----

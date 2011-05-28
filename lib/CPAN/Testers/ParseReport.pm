@@ -17,7 +17,7 @@ use XML::LibXML::XPathContext;
 
 our $default_ctformat = "yaml";
 our $default_transport = "http_cpantesters";
-our $default_cturl = "http://www.cpantesters.org/show";
+our $default_cturl = "http://static.cpantesters.org/show";
 our $Signal = 0;
 
 =encoding utf-8
@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.19');
+use version; our $VERSION = qv('0.1.20');
 
 =head1 SYNOPSIS
 
@@ -295,7 +295,7 @@ sub parse_single_report {
             $Opt{transport} ||= $default_transport;
             if (0) {
             } elsif ($Opt{transport} eq "http_cpantesters") {
-                my $resp = _ua->mirror("http://www.cpantesters.org/cgi-bin/pages.cgi?act=cpan-report&raw=1&id=$id",$target);
+                my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1",$target);
                 if ($resp->is_success) {
                     if ($Opt{verbose}) {
                         my(@stat) = stat $target;
@@ -316,7 +316,7 @@ sub parse_single_report {
                 if (-e "$target.gz") {
                     0 == system gunzip => $target or die;
                 }
-                my $resp = _ua->mirror("http://www.cpantesters.org/cgi-bin/pages.cgi?act=cpan-report&raw=1&id=$id",$target);
+                my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1",$target);
                 if ($resp->is_success) {
                     if ($Opt{verbose}) {
                         my(@stat) = stat $target;
