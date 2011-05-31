@@ -1,3 +1,10 @@
+2011-05-31  Andreas J. Koenig  <andk@cpan.org>
+
+	* release 0.1.21
+
+	* protect against zcat implementations that expect a $target.Z file
+	instead of a $target.gz file
+
 2011-05-28  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.20

@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.20');
+use version; our $VERSION = qv('0.1.21');
 
 =head1 SYNOPSIS
 
@@ -916,7 +916,7 @@ sub _get_cooked_report {
         } elsif (-e $target) {
             open $fh, '<', $target or die "Could not open '$target': $!";
         } elsif (-e "$target.gz") {
-            open $fh, "-|", "zcat", $target or die "Could not open '$target.gz': $!";
+            open $fh, "-|", "zcat", "$target.gz" or die "Could not open '$target.gz': $!";
         } else {
             die "Could not find '$target' or '$target.gz'";
         }
