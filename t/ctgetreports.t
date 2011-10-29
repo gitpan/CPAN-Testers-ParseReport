@@ -5,7 +5,6 @@ use Test::More;
 use File::Spec;
 use CPAN::Testers::ParseReport;
 use List::Util qw(sum);
-use YAML::Syck;
 
 my $plan;
 
@@ -37,7 +36,7 @@ my $plan;
            "Scriptalicious",
            %Opt,
           );
-    my $Y = YAML::Syck::LoadFile("ctgetreports.out");
+    my $Y = CPAN::Testers::ParseReport::_yaml_loadfile("ctgetreports.out");
     my $count = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
     is($count, 130, "found $count==130 reports via meta:from");
     is($Y->{"meta:ok"}{PASS}{PASS}, 79, "found 79 PASS");
@@ -66,7 +65,7 @@ my $plan;
            "Scriptalicious",
            %Opt,
           );
-    my $Y = YAML::Syck::LoadFile("ctgetreports.out");
+    my $Y = CPAN::Testers::ParseReport::_yaml_loadfile("ctgetreports.out");
     my $count = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
     is($count, 99, "found $count==99 reports via meta:from");
 }
@@ -88,7 +87,7 @@ my $plan;
            "Scriptalicious",
            %Opt,
           );
-    my $Y = YAML::Syck::LoadFile("ctgetreports.out");
+    my $Y = CPAN::Testers::ParseReport::_yaml_loadfile("ctgetreports.out");
     my $count = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
     is($count, 130, "found $count==130 reports via meta:from");
 }
@@ -560,6 +559,29 @@ my $plan;
     is $extract->{'env:$UID'}, q{1001}, "report $id: UID=1001";
     is $extract->{'env:$GID'}, q{1001 1001 1001}, "report $id: GID=1001 1001 1001";
     is $extract->{'env:$^X'}, q{/usr/home/cpan/pit/bare/perl-5.10.0/bin/perl}, "report $id: \$^X=/usr/home/cpan/pit/bare/perl-5.10.0/bin/perl";
+}
+
+{
+    BEGIN {
+        $plan += 2;
+    }
+    my $id = 16833358;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'meta:perl'}, q{5.12.4}, "report $id: meta:perl";
+    is $extract->{'mod:CPANPLUS'}, q{0.9111}, "report $id: mod:CPANPLUS";
 }
 
 unlink "ctgetreports.out";

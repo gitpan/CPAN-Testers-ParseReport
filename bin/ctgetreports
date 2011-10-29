@@ -340,6 +340,11 @@ if ($Opt{report}) {
     }
 }
 
+if ($Opt{interactive}) {
+    eval { require IO::Prompt; 1; } or
+        die "Option '--interactive' requires IO::Prompt installed";
+}
+
 if ($Opt{solve}) {
     eval { require Statistics::Regression };
     if ($@) {

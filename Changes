@@ -1,3 +1,12 @@
+2011-10-29  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
+
+	* release 0.1.22
+
+	* support YAML::XS besides YAML::Syck
+
+	* set CPANPLUS version from the intro of the report if not reported
+	properly in the footer
+
 2011-05-31  Andreas J. Koenig  <andk@cpan.org>
 
 	* release 0.1.21

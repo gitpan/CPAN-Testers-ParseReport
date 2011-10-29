@@ -28,7 +28,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.21');
+use version; our $VERSION = qv('0.1.22');
 
 =head1 SYNOPSIS
 
@@ -102,6 +102,20 @@ $extract is the result of parse_report() described below.
         $catalog =~ s|ParseReport.pm$|ParseReport/catalog|;
         $xp->load_catalog($catalog);
         return $xp;
+    }
+}
+
+{
+    my $yaml = eval { require YAML::Syck; "YAML::Syck" }
+        ||     eval { require YAML::XS; "YAML::XS" };
+    if ($yaml eq "YAML::Syck") {
+        *_yaml_loadfile = \&YAML::Syck::LoadFile;
+        *_yaml_dump     = \&YAML::Syck::Dump;
+    } elsif ($yaml eq "YAML::XS") {
+        *_yaml_loadfile = \&YAML::XS::LoadFile;
+        *_yaml_dump     = \&YAML::XS::Dump;
+    } else {
+        die "Found neither YAML::Syck nor YAML::XS installed, cannot continue";
     }
 }
 
@@ -244,8 +258,7 @@ sub _parse_html {
 
 sub _parse_yaml {
     my($ctarget, %Opt) = @_;
-    require YAML::Syck;
-    my $arr = YAML::Syck::LoadFile($ctarget);
+    my $arr = _yaml_loadfile($ctarget);
     my($selected_release_ul,$selected_release_distrov,$excuse_string);
     if ($Opt{vdistro}) {
         $excuse_string = "selected distro '$Opt{vdistro}'";
@@ -421,10 +434,9 @@ sub parse_distro {
         last if $Signal;
     }
     if ($Opt{dumpvars}) {
-        require YAML::Syck;
         my $dumpfile = $Opt{dumpfile} || "ctgetreports.out";
         open my $fh, ">", $dumpfile or die "Could not open '$dumpfile' for writing: $!";
-        print $fh YAML::Syck::Dump(\%dumpvars);
+        print $fh _yaml_dump(\%dumpvars);
         close $fh or die "Could not close '$dumpfile': $!"
     }
     if ($Opt{solve}) {
@@ -537,7 +549,6 @@ sub parse_report {
     unless ($extract{"meta:about"}) {
         $extract{"meta:about"} = $Opt{vdistro};
         unless ($extract{"meta:ok"}) {
-            $DB::single++;
             warn "Warning: could not determine state of report";
         }
     }
@@ -840,6 +851,9 @@ sub parse_report {
             $expecting_toolchain_soon=1;
         }
     }                           # LINE
+    if (! $extract{"mod:CPANPLUS"} && $extract{"meta:writer"} =~ /^CPANPLUS\s(\d+(\.\d+))$/) {
+        $extract{"mod:CPANPLUS"} = $1;
+    }
     if (! $extract{"meta:perl"} && $fallback_p5) {
         my($p5,$patch) = split /\s+patch\s+/, $fallback_p5;
         $extract{"meta:perl"} = $p5;
@@ -877,7 +891,8 @@ sub parse_report {
         print STDERR $report, "\n================\n" unless $Opt{quiet};
     }
     if ($Opt{interactive}) {
-        require IO::Prompt;
+        eval { require IO::Prompt; 1; } or
+            die "Option '--interactive' requires IO::Prompt installed";
         local @ARGV;
         local $ARGV;
         my $ans = IO::Prompt::prompt
@@ -1162,8 +1177,7 @@ sub _run_regression {
               $reg->rsq;};
         if ($@) {
             if ($opt->{verbose} && $opt->{verbose}>=2) {
-                require YAML::Syck;
-                warn YAML::Syck::Dump
+                warn _yaml_dump
                     ({error=>"could not determine some regression parameters",
                       variable=>$variable,
                       k=>$reg->k,

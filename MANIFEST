@@ -86,6 +86,7 @@ t/var/nntp-testers/1634201
 t/var/nntp-testers/1639785
 t/var/nntp-testers/1666660
 t/var/nntp-testers/1678737
+t/var/nntp-testers/16833358.gz
 t/var/nntp-testers/1692130
 t/var/nntp-testers/1698371
 t/var/nntp-testers/1703708
@@ -161,3 +162,4 @@ t/var/nntp-testers/6422067
 t/var/nntp-testers/6525411
 t/var/nntp-testers/8327429
 TODO
+META.json                                Module JSON meta-data (added by MakeMaker)

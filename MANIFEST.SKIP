@@ -20,3 +20,4 @@ pm_to_blib
 ^Makefile$
 ^tmp/
 git-daemon-export-ok
+^MYMETA\.

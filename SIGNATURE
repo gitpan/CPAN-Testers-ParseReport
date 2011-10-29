@@ -14,24 +14,25 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 dcd576391c963f8a604f56476ccf84a7807fa70b Changes
-SHA1 657cbdab74543ba20891dd9b31ae97aeec4b12a5 MANIFEST
-SHA1 26f9ec5bed63c96d99c3c601bafe6722e0fa49cc MANIFEST.SKIP
-SHA1 543ab7542ee95eb85f9e64ce16b0bd4e641b0482 META.yml
-SHA1 fab21a94f45849e54f4618606e1bcd209b567939 Makefile.PL
+SHA1 8eb9006374e5b4e33ee9d04775c966fa6bd8804c Changes
+SHA1 38e144ef4e2e20a108da1b924af7217b6eb14ccb MANIFEST
+SHA1 0a41a8266c341c7e68922583a94f89fd9b149cbe MANIFEST.SKIP
+SHA1 be9bc4e0e26e9d5b11ed5fab7503fcf8e23e2b47 META.json
+SHA1 4e35ceb36874296a7cb3da68c4154816bd3fc04a META.yml
+SHA1 e280809185a8893aed834ca29e83c553e645e83e Makefile.PL
 SHA1 af348ab0f2fa69ad7dd041744d3fc4c1674acf88 README
 SHA1 75e051bd856dd73b1ac2ca54d910d4f00dc49fbe TODO
 SHA1 8b53bdb4632531b3598bfcafd87a3de4537e13fe bin/conf2conf.pl
-SHA1 fe651bdc945c2b13f29d9da20b5e5e7c8e44db86 bin/ctgetreports
+SHA1 5f33dfc347e92bf74d28e85eb30b033a864a3211 bin/ctgetreports
 SHA1 ba9b408017070abf10118cff7b92a5f0ee5aec08 bin/ctsolvereports
-SHA1 47b2a4dfa6133ebbbbbe004b8663b85ead90ad99 lib/CPAN/Testers/ParseReport.pm
+SHA1 a6f0e466e85d3b82aab573f9e68222d98b31b29b lib/CPAN/Testers/ParseReport.pm
 SHA1 6236447d69c01e46adef7a159470de3dab3cea73 lib/CPAN/Testers/ParseReport/catalog
 SHA1 f9b739ae2d1b7fbe44edf6fa1f8e72b484cedb5c lib/CPAN/Testers/ParseReport/catalog.dtd
 SHA1 223952bb81d253cf4cdac18e88b5513ea14fe824 lib/CPAN/Testers/ParseReport/loose.dtd
 SHA1 5ad053b310743766a9cf3bf6e7090c97d6bdfb66 lib/CPAN/Testers/ParseReport/xhtml1-transitional.dtd
 SHA1 a1ea507fdde0592c088373182ba28edf0a2a4467 t/00-load.t
 SHA1 ac2a1155ee576a6742231d3745e75698044e2408 t/01-metayaml.t
-SHA1 b4d48a3563643218ae4872aee20671037988919e t/ctgetreports.t
+SHA1 6004d62ef9779772f14d3a515368526c5a6c6f91 t/ctgetreports.t
 SHA1 0b1c5a2d59be6bfa7d60c64cd964fea6a0331705 t/pod-coverage.t
 SHA1 640935336dc1123c0069bcf5432bcaedc2cf22d3 t/pod.t
 SHA1 dc81efbf47d931f84070d06f36eec909b25fbd03 t/run.t
@@ -102,6 +103,7 @@ SHA1 0a0036ec977834ebb53fadc7265baf16422c6a9b t/var/nntp-testers/1634201
 SHA1 11362a2fb6841d39a6898747932f528e3eca0707 t/var/nntp-testers/1639785
 SHA1 a2c85c7d129b2c3a34085a27e4ea67df78295985 t/var/nntp-testers/1666660
 SHA1 272fbfd73c98a956169ec3b926e048f364612cd8 t/var/nntp-testers/1678737
+SHA1 1438cd6741c2d91b90bdec07f273e6df2ee37641 t/var/nntp-testers/16833358.gz
 SHA1 5dfb7c1dee03f3d971b89b7542147a2693928061 t/var/nntp-testers/1692130
 SHA1 13a935c6cd19a3adcecd0436854ddb1f65d3dff4 t/var/nntp-testers/1698371
 SHA1 41f8fbdd7dab19eca3d3f9472d5a318d7ae68173 t/var/nntp-testers/1703708
@@ -179,7 +181,7 @@ SHA1 25d73b8cf20feb02cfdbfb9f1a408dc4fac3cbcb t/var/nntp-testers/8327429
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAk3ki9cACgkQ7IA58KMXwV2cOQCfWzhZ+tjqayNJuWafe/K6c7Y8
-vQ0AoO+7F1PoI8NeF9FQTLZ2RD3KgNAv
-=V4Ye
+iEYEARECAAYFAk6r2nQACgkQ7IA58KMXwV2bIgCgnr3OmawqBdCdn6/lQF3nznnX
+JiQAoNp7uoS11RUd+CQQexmn4z+Pkvzd
+=8tCC
 -----END PGP SIGNATURE-----

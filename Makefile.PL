@@ -47,12 +47,14 @@ my %interesting_modules;
 for my $m (qw(
     CPAN::Meta::YAML
     File::Spec
+    IO::Prompt
     JSON::PP
     Parse::CPAN::Meta
+    YAML::Syck
+    YAML::XS
     version
     )){
-    eval "require $m";
-    if (!$@) {
+    if (eval "require $m; 1") {
         $interesting_modules{$m} = $m->VERSION;
     }
 }
@@ -65,7 +67,7 @@ my $prereq_pm =
      'Getopt::Long'                => 0,
      'HTML::Entities'              => 0,
      'Hash::Util'                  => 0,
-     'IO::Prompt'                  => 0,
+     # 'IO::Prompt'                  => 0,
      'LWP::UserAgent'              => 0,
      'List::Util'                  => 0,
      'MIME::QuotedPrint'           => '3.07',
@@ -76,8 +78,11 @@ my $prereq_pm =
      'Time::Local'                 => '1.11',
      'XML::LibXML'                 => 0,
      'XML::LibXML::XPathContext'   => 0,
-     'YAML::Syck'                  => 0,
+     # 'YAML::Syck'                  => 0,
     };
+unless ($interesting_modules{"YAML::XS"} || $interesting_modules{"YAML::Syck"}) {
+    $prereq_pm->{"YAML::Syck"} = 0;
+}
 # intentionally avoiding any size comparisons, trying to catch
 # interesting cases that happen during WriteMakefile, like
 # http://www.cpantesters.org/cpan/report/e1942da8-5fcc-11e0-994f-224f8e2a057c
