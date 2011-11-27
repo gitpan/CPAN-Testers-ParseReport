@@ -10,15 +10,19 @@ lib/CPAN/Testers/ParseReport/xhtml1-transitional.dtd
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
+META.json			Module JSON meta-data (added by MakeMaker)
 META.yml
 README
 SIGNATURE			Public-key signature (added by MakeMaker)
 t/00-load.t
 t/01-metayaml.t
 t/ctgetreports.t
+t/ctgr-live.t
 t/pod-coverage.t
 t/pod.t
 t/run.t
+t/var/cpantesters-show/Scriptalicious.headers
+t/var/cpantesters-show/Scriptalicious.json
 t/var/cpantesters-show/Scriptalicious.yaml
 t/var/nntp-testers/1423910
 t/var/nntp-testers/1423911
@@ -162,4 +166,3 @@ t/var/nntp-testers/6422067
 t/var/nntp-testers/6525411
 t/var/nntp-testers/8327429
 TODO
-META.json                                Module JSON meta-data (added by MakeMaker)

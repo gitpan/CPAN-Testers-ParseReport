@@ -15,9 +15,8 @@ use Time::Local ();
 use XML::LibXML;
 use XML::LibXML::XPathContext;
 
-our $default_ctformat = "yaml";
 our $default_transport = "http_cpantesters";
-our $default_cturl = "http://static.cpantesters.org/show";
+our $default_cturl = "http://static.cpantesters.org/distro";
 our $Signal = 0;
 
 =encoding utf-8
@@ -28,7 +27,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.1.22');
+use version; our $VERSION = qv('0.2.0');
 
 =head1 SYNOPSIS
 
@@ -52,9 +51,9 @@ through to the functions unaltered.
 
 =head2 parse_distro($distro,%options)
 
-reads the cpantesters HTML page or the YAML file or the local database
-for the distro and loops through the reports for the specified or most
-recent version of that distro found in these data.
+reads the cpantesters JSON file or the local database for the distro
+and loops through the reports for the specified or most recent version
+of that distro found in these data.
 
 parse_distro() intentionally has no meaningful return value, different
 options would require different ones.
@@ -81,12 +80,20 @@ $extract is the result of parse_report() described below.
              env_proxy => 1,
             );
         $ua->parse_head(0);
-
-        # I would love to support gzipped transfer but it doesn't seem
-        # to mix well with mirroring:
-
-        # $ua->default_header('Accept-Encoding' => scalar HTTP::Message::decodable());
-
+        $ua;
+    }
+}
+{
+    my $ua;
+    sub _ua_gzip {
+        return $ua if $ua;
+        $ua = LWP::UserAgent->new
+            (
+             keep_alive => 1,
+             env_proxy => 1,
+            );
+        $ua->parse_head(0);
+        $ua->default_header('Accept-Encoding' => scalar HTTP::Message::decodable());
         $ua;
     }
 }
@@ -106,24 +113,27 @@ $extract is the result of parse_report() described below.
 }
 
 {
-    my $yaml = eval { require YAML::Syck; "YAML::Syck" }
-        ||     eval { require YAML::XS; "YAML::XS" };
-    if ($yaml eq "YAML::Syck") {
-        *_yaml_loadfile = \&YAML::Syck::LoadFile;
-        *_yaml_dump     = \&YAML::Syck::Dump;
-    } elsif ($yaml eq "YAML::XS") {
-        *_yaml_loadfile = \&YAML::XS::LoadFile;
-        *_yaml_dump     = \&YAML::XS::Dump;
-    } else {
-        die "Found neither YAML::Syck nor YAML::XS installed, cannot continue";
+    # we called it yaml because it was yaml; now it is json
+    use JSON::XS;
+    my $j = JSON::XS->new->ascii->pretty;
+    sub _slurp {
+        my($file) = @_;
+        local $/;
+        open my $fh, $file or die "Could not open '$file': $!";
+        <$fh>;
+    }
+    sub _yaml_loadfile {
+        $j->decode(_slurp shift);
+    }
+    sub _yaml_dump {
+        $j->encode(shift);
     }
 }
 
 sub _download_overview {
     my($cts_dir, $distro, %Opt) = @_;
-    my $format = $Opt{ctformat} ||= $default_ctformat;
     my $cturl = $Opt{cturl} ||= $default_cturl;
-    my $ctarget = "$cts_dir/$distro.$format";
+    my $ctarget = "$cts_dir/$distro.json";
     my $cheaders = "$cts_dir/$distro.headers";
     if ($Opt{local}) {
         unless (-e $ctarget) {
@@ -137,7 +147,8 @@ sub _download_overview {
                 print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
             }
             print STDERR "Fetching $ctarget..." if $Opt{verbose} && !$Opt{quiet};
-            my $uri = "$cturl/$distro.$format";
+            my $firstletter = substr($distro,0,1);
+            my $uri = "$cturl/$firstletter/$distro.json";
             my $resp = _ua->mirror($uri,$ctarget);
             if ($resp->is_success) {
                 print STDERR "DONE\n" if $Opt{verbose} && !$Opt{quiet};
@@ -163,97 +174,6 @@ sub _download_overview {
         }
     }
     return $ctarget;
-}
-
-sub _parse_html {
-    my($ctarget, %Opt) = @_;
-    my $content = do { open my $fh, $ctarget or die; local $/; <$fh> };
-    my $preprocesswithtreebuilder = 0; # not needed since barbie switched to XHTML
-    if ($preprocesswithtreebuilder) {
-        require HTML::TreeBuilder;
-        my $tree = HTML::TreeBuilder->new;
-        $tree->implicit_tags(1);
-        $tree->p_strict(1);
-        $tree->ignore_ignorable_whitespace(0);
-        $tree->parse_content($content);
-        $tree->eof;
-        $content = $tree->as_XML;
-    }
-    my $parser = _xp();
-    my $doc = eval { $parser->parse_string($content) };
-    my $err = $@;
-    unless ($doc) {
-        my $distro = basename $ctarget;
-        die sprintf "Error while parsing %s\: %s", $distro, $err;
-    }
-    my $xc = XML::LibXML::XPathContext->new($doc);
-    my $nsu = $doc->documentElement->namespaceURI;
-    $xc->registerNs('x', $nsu) if $nsu;
-    my($selected_release_ul,$selected_release_distrov,$excuse_string);
-    my($cparentdiv)
-        = $nsu ?
-            $xc->findnodes("/x:html/x:body/x:div[\@id = 'doc']") :
-                $doc->findnodes("/html/body/div[\@id = 'doc']");
-    my(@releasedivs) = $nsu ?
-        $xc->findnodes("//x:div[x:h2 and x:ul]",$cparentdiv) :
-            $cparentdiv->findnodes("//div[h2 and ul]");
-    my $releasediv;
-    if ($Opt{vdistro}) {
-        $excuse_string = "selected distro '$Opt{vdistro}'";
-        my($fallbacktoversion) = $Opt{vdistro} =~ /(\d+\..*)/;
-        $fallbacktoversion = 0 unless defined $fallbacktoversion;
-      RELEASE: for my $i (0..$#releasedivs) {
-            my $picked = "";
-            my($x) = $nsu ?
-                $xc->findvalue("x:h2/x:a[2]/\@name",$releasedivs[$i]) :
-                    $releasedivs[$i]->findvalue("h2/a[2]/\@name");
-            if ($x) {
-                if ($x eq $Opt{vdistro}) {
-                    $releasediv = $i;
-                    $picked = " (picked)";
-                }
-                print STDERR "FOUND DISTRO: $x$picked\n" unless $Opt{quiet};
-            } else {
-                ($x) = $nsu ?
-                    $xc->findvalue("x:h2/x:a[1]/\@name",$releasedivs[$i]) :
-                        $releasedivs[$i]->findvalue("h2/a[1]/\@name");
-                if ($x eq $fallbacktoversion) {
-                    $releasediv = $i;
-                    $picked = " (picked)";
-                }
-                print STDERR "FOUND VERSION: $x$picked\n" unless $Opt{quiet};
-            }
-        }
-    } else {
-        $excuse_string = "any distro";
-    }
-    unless (defined $releasediv) {
-        $releasediv = 0;
-    }
-    # using a[1] because a[2] is missing on the first entry
-    ($selected_release_distrov) = $nsu ?
-        $xc->findvalue("x:h2/x:a[1]/\@name",$releasedivs[$releasediv]) :
-            $releasedivs[$releasediv]->findvalue("h2/a[1]/\@name");
-    ($selected_release_ul) = $nsu ?
-        $xc->findnodes("x:ul",$releasedivs[$releasediv]) :
-            $releasedivs[$releasediv]->findnodes("ul");
-    unless (defined $selected_release_distrov) {
-        warn "Warning: could not find $excuse_string in '$ctarget'";
-        return;
-    }
-    print STDERR "SELECTED: $selected_release_distrov\n" unless $Opt{quiet};
-    my($id);
-    my @all;
-    for my $test ($nsu ?
-                  $xc->findnodes("x:li",$selected_release_ul) :
-                  $selected_release_ul->findnodes("li")) {
-        $id = $nsu ?
-            $xc->findvalue("x:a[1]/text()",$test)     :
-                $test->findvalue("a[1]/text()");
-        push @all, {id=>$id};
-        return if $Signal;
-    }
-    return \@all;
 }
 
 sub _parse_yaml {
@@ -295,6 +215,8 @@ sub parse_single_report {
     my($report, $dumpvars, %Opt) = @_;
     my($id) = $report->{id};
     $Opt{cachedir} ||= "$ENV{HOME}/var/cpantesters";
+    # the name nntp-testers was picked because originally the reports
+    # were available from an NNTP server
     my $nnt_dir = "$Opt{cachedir}/nntp-testers";
     mkpath $nnt_dir;
     my $target = "$nnt_dir/$id";
@@ -308,44 +230,60 @@ sub parse_single_report {
             $Opt{transport} ||= $default_transport;
             if (0) {
             } elsif ($Opt{transport} eq "http_cpantesters") {
-                my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1",$target);
-                if ($resp->is_success) {
-                    if ($Opt{verbose}) {
-                        my(@stat) = stat $target;
-                        my $timestamp = gmtime $stat[9];
-                        print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
-                        if ($Opt{verbose} > 1) {
-                            print STDERR $resp->headers->as_string unless $Opt{quiet};
-                        }
+                my $mustfetch = 0;
+                if ($Opt{"prefer-local-reports"}) {
+                    unless (-e $target) {
+                        $mustfetch = 1;
                     }
-                    my $headers = "$target.headers";
-                    open my $fh, ">", $headers or die {severity=>1,text=>"Could not open >$headers: $!"};
-                    print $fh $resp->headers->as_string;
                 } else {
-                    die {severity=>0,
-                             text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                    $mustfetch = 1;
+                }
+                if ($mustfetch) {
+                    my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1",$target);
+                    if ($resp->is_success) {
+                        if ($Opt{verbose}) {
+                            my(@stat) = stat $target;
+                            my $timestamp = gmtime $stat[9];
+                            print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
+                            if ($Opt{verbose} > 1) {
+                                print STDERR $resp->headers->as_string unless $Opt{quiet};
+                            }
+                        }
+                        my $headers = "$target.headers";
+                        open my $fh, ">", $headers or die {severity=>1,text=>"Could not open >$headers: $!"};
+                        print $fh $resp->headers->as_string;
+                    } else {
+                        die {severity=>0,
+                                 text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                    }
                 }
             } elsif ($Opt{transport} eq "http_cpantesters_gzip") {
-                if (-e "$target.gz") {
-                    0 == system gunzip => $target or die;
-                }
-                my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1",$target);
-                if ($resp->is_success) {
-                    if ($Opt{verbose}) {
-                        my(@stat) = stat $target;
-                        my $timestamp = gmtime $stat[9];
-                        print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
-                        if ($Opt{verbose} > 1) {
-                            print STDERR $resp->headers->as_string unless $Opt{quiet};
-                        }
+                my $mustfetch = 0;
+                if ($Opt{"prefer-local-reports"}) {
+                    unless (-e "$target.gz") {
+                        $mustfetch = 1;
                     }
-                    my $headers = "$target.headers";
-                    open my $fh, ">", $headers or die {severity=>1,text=>"Could not open >$headers: $!"};
-                    print $fh $resp->headers->as_string;
-                    0 == system gzip => $target or die;
                 } else {
-                    die {severity=>0,
-                             text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                    $mustfetch = 1;
+                }
+                if ($mustfetch) {
+                    my $resp = _ua_gzip->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1","$target.gz");
+                    if ($resp->is_success) {
+                        if ($Opt{verbose}) {
+                            my(@stat) = stat "$target.gz";
+                            my $timestamp = gmtime $stat[9];
+                            print STDERR "(timestamp $timestamp GMT)\n" unless $Opt{quiet};
+                            if ($Opt{verbose} > 1) {
+                                print STDERR $resp->headers->as_string unless $Opt{quiet};
+                            }
+                        }
+                        my $headers = "$target.headers";
+                        open my $fh, ">", $headers or die {severity=>1,text=>"Could not open >$headers: $!"};
+                        print $fh $resp->headers->as_string;
+                    } else {
+                        die {severity=>0,
+                                 text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                    }
                 }
             } else {
                 die {severity=>1,text=>"Illegal value for --transport: '$Opt{transport}'"};
@@ -359,6 +297,9 @@ sub parse_distro {
     my($distro,%Opt) = @_;
     my %dumpvars;
     $Opt{cachedir} ||= "$ENV{HOME}/var/cpantesters";
+    # the name cpantesters-show was picked because originally
+    # http://www.cpantesters.org/show/ contained html file that we had
+    # to parse.
     my $cts_dir = "$Opt{cachedir}/cpantesters-show";
     mkpath $cts_dir;
     if ($Opt{solve}) {
@@ -396,12 +337,7 @@ sub parse_distro {
         $reports = \@all;
     } else {
         my $ctarget = _download_overview($cts_dir, $distro, %Opt);
-        $Opt{ctformat} ||= $default_ctformat;
-        if ($Opt{ctformat} eq "html") {
-            $reports = _parse_html($ctarget,%Opt);
-        } else {
-            $reports = _parse_yaml($ctarget,%Opt);
-        }
+        $reports = _parse_yaml($ctarget,%Opt);
     }
     return unless $reports;
     my $sampled = 0;

@@ -50,8 +50,6 @@ for my $m (qw(
     IO::Prompt
     JSON::PP
     Parse::CPAN::Meta
-    YAML::Syck
-    YAML::XS
     version
     )){
     if (eval "require $m; 1") {
@@ -68,6 +66,7 @@ my $prereq_pm =
      'HTML::Entities'              => 0,
      'Hash::Util'                  => 0,
      # 'IO::Prompt'                  => 0,
+     'JSON::XS'                    => 0,
      'LWP::UserAgent'              => 0,
      'List::Util'                  => 0,
      'MIME::QuotedPrint'           => '3.07',
@@ -78,11 +77,8 @@ my $prereq_pm =
      'Time::Local'                 => '1.11',
      'XML::LibXML'                 => 0,
      'XML::LibXML::XPathContext'   => 0,
-     # 'YAML::Syck'                  => 0,
     };
-unless ($interesting_modules{"YAML::XS"} || $interesting_modules{"YAML::Syck"}) {
-    $prereq_pm->{"YAML::Syck"} = 0;
-}
+
 # intentionally avoiding any size comparisons, trying to catch
 # interesting cases that happen during WriteMakefile, like
 # http://www.cpantesters.org/cpan/report/e1942da8-5fcc-11e0-994f-224f8e2a057c
@@ -145,7 +141,7 @@ package MY;
 sub distsignature {
     my($self) = shift;
     my $ret = $self->SUPER::distsignature_target(@_);
-    $ret =~ s|cpansign|\`dirname \$(PERL)\`/cpansign|g;
+    $ret =~ s|cpansign|\$(PERL) \`dirname \$(PERL)\`/cpansign|g;
     return $ret;
 }
 sub postamble {
@@ -181,7 +177,7 @@ release :: disttest
 	rm -rf $(DISTVNAME)
 
 sign:
-	`dirname $(PERL)`/cpansign -s
+	$(PERL) `dirname $(PERL)`/cpansign -s
 };
   join "", @m;
 }

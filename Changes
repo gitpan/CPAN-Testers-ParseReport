@@ -1,3 +1,28 @@
+2011-11-27  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
+
+	* release 0.2.0
+
+	* Upgrading to this release seems needed to get at reports of distros
+	for which a yaml formatted summary file is not available. I don't know
+	whether yaml files will reappear at cpantesters.org but I have
+	encountered distros that had no yaml file at all but did have a json
+	file.
+
+	* Minor incompatibility: old yaml files with summaries of results are no
+	longer supported. We now have settled to download JSON files from
+	cpantesters.org and use those. It seems that JSON is the preferred
+	format at cpantesters.org, at least for now. The path to the summary
+	files had to be adjusted.
+
+	* introduce --prefer-local-reports option to skip mirroring for all
+	reports we have ever downloaded before. Highly recommended to reduce
+	latency, especially since If-Modified-Since support at cpantesters seems
+	not always to be a given.
+
+	* on transport=http_cpantesters_gzip set the HTTP headers to get
+	compressed versions of reports. Highly recommended to reduce download
+	times.
+
 2011-10-29  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.1.22

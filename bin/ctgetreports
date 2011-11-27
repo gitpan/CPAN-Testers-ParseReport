@@ -33,13 +33,6 @@ together with C<--cturl>. Requires
 C<CPAN::WWW::Testers::Generator::Database> and C<CPAN::DistnameInfo>
 installed.
 
-=item B<--ctformat=s>
-
-Format of the cpan-testers file that should be downloaded. Available
-options were originally C<html> and C<yaml>. With major construction
-works going on the HTML on cpantesters is now unsupported for the time
-being.
-
 =item B<--cturl=s>
 
 Base URL of the cpantesters website. Defaults to
@@ -83,7 +76,7 @@ After every parsed report asks if you want to see it in a pager.
 
 =item B<--local>
 
-Do not mirror, use a local *.html file. Dies if the HTML or YAML file
+Do not mirror, use a local *.yaml file. Dies if the YAML file
 is missing, skips missing report files.
 
 =item B<--pager=s>
@@ -109,6 +102,17 @@ stands for the following additional options:
   -q qr:(You planned.*)
 
 This list is subject to change in future releases.
+
+=item B<--prefer-local-reports|plr>
+
+Boolean. If true, we skip downloading of reports from cpantesters when
+the file that is designated to be the local target of the mirror
+command already exists. This is highly recommended since it has been
+observed (2011-11) that cpantesters is not sending Last-Modified
+headers for reports and does not send a 304 on requests with an
+If-Modified-Since header. But even when the HTTP handling becomes more
+efficient at cpantesters main site, this parameter should lower the
+burden on them and reduce the latency on the mirror side considerably.
 
 =item B<--q=s@>
 
@@ -157,7 +161,7 @@ C<--solvetop>) candidates according to R^2 with their regression
 analysis.
 
 A few words of advise: do not take the results as a prove ever. Take
-them just as a hint where you can most probablt prove a causal
+them just as a hint where you can most probably prove a causal
 relationship. And keep in mind that causal relationships can be the
 other direction as well.
 
@@ -178,7 +182,7 @@ C<http_cpantesters> uses LWP::UserAgent at static.cpantesters.org.
 
 C<http_cpantesters_gzip> also uses LWP::UserAgent at
 static.cpantesters.org but compresses the fetched result after fetching
-and decompresses cached results before mirroring. This optione
+and decompresses cached results before mirroring. This option
 requires that the external programs C<gzip>,C<gunzip>, and C<zcat> are
 installed on the system.
 
