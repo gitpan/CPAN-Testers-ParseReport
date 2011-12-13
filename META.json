@@ -35,6 +35,7 @@
             "CPAN::Meta::Converter" : "2.110440",
             "CPAN::Meta::YAML" : "0.004",
             "Class::ISA" : 0,
+            "Compress::Zlib" : 0,
             "Config::Perl::V" : 0,
             "DateTime" : 0,
             "DateTime::Format::Strptime" : 0,
@@ -54,8 +55,6 @@
             "Test::More" : 0,
             "Test::Pod" : 0,
             "Time::Local" : "1.11",
-            "XML::LibXML" : 0,
-            "XML::LibXML::XPathContext" : 0,
             "version" : "0.93"
          }
       }
@@ -63,10 +62,10 @@
    "provides" : {
       "CPAN::Testers::ParseReport" : {
          "file" : "lib/CPAN/Testers/ParseReport.pm",
-         "version" : "v0.2.0"
+         "version" : "v0.2.1"
       }
    },
    "release_status" : "stable",
-   "version" : "v0.2.0",
+   "version" : "v0.2.1",
    "x_repository" : "git://repo.or.cz/cpan-testers-parsereport.git"
 }

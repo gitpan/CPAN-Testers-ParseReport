@@ -59,6 +59,7 @@ for my $m (qw(
 
 my $prereq_pm =
     {
+     'Compress::Zlib'              => 0,
      'Config::Perl::V'             => 0,
      'DateTime::Format::Strptime'  => 0,
      'File::Path'                  => '1.08',
@@ -75,8 +76,6 @@ my $prereq_pm =
      'Test::More'                  => 0,
      'Test::Pod'                   => 0,
      'Time::Local'                 => '1.11',
-     'XML::LibXML'                 => 0,
-     'XML::LibXML::XPathContext'   => 0,
     };
 
 # intentionally avoiding any size comparisons, trying to catch

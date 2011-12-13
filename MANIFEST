@@ -3,10 +3,6 @@ bin/ctgetreports
 bin/ctsolvereports
 Changes
 lib/CPAN/Testers/ParseReport.pm
-lib/CPAN/Testers/ParseReport/catalog
-lib/CPAN/Testers/ParseReport/catalog.dtd
-lib/CPAN/Testers/ParseReport/loose.dtd
-lib/CPAN/Testers/ParseReport/xhtml1-transitional.dtd
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP

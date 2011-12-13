@@ -3,6 +3,7 @@ package CPAN::Testers::ParseReport;
 use warnings;
 use strict;
 
+use Compress::Zlib ();
 use Config::Perl::V ();
 use DateTime::Format::Strptime;
 use File::Basename qw(basename);
@@ -12,8 +13,6 @@ use LWP::UserAgent;
 use List::Util qw(max min sum);
 use MIME::QuotedPrint ();
 use Time::Local ();
-use XML::LibXML;
-use XML::LibXML::XPathContext;
 
 our $default_transport = "http_cpantesters";
 our $default_cturl = "http://static.cpantesters.org/distro";
@@ -27,7 +26,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.0');
+use version; our $VERSION = qv('0.2.1');
 
 =head1 SYNOPSIS
 
@@ -95,20 +94,6 @@ $extract is the result of parse_report() described below.
         $ua->parse_head(0);
         $ua->default_header('Accept-Encoding' => scalar HTTP::Message::decodable());
         $ua;
-    }
-}
-
-{
-    my $xp;
-    sub _xp {
-        return $xp if $xp;
-        $xp = XML::LibXML->new;
-        $xp->keep_blanks(0);
-        $xp->clean_namespaces(1);
-        my $catalog = __FILE__;
-        $catalog =~ s|ParseReport.pm$|ParseReport/catalog|;
-        $xp->load_catalog($catalog);
-        return $xp;
     }
 }
 
@@ -862,17 +847,31 @@ sub _get_cooked_report {
         undef $target;
     }
     if ($target) {
-        my $fh;
+        local $/;
+        my $raw_report;
         if (0) {
         } elsif (-e $target) {
-            open $fh, '<', $target or die "Could not open '$target': $!";
+            open my $fh, '<', $target or die "Could not open '$target': $!";
+            $raw_report = <$fh>;
         } elsif (-e "$target.gz") {
-            open $fh, "-|", "zcat", "$target.gz" or die "Could not open '$target.gz': $!";
+            open my $fh, "<", "$target.gz" or die "Could not open '$target.gz': $!";
+
+#     Opens a gzip (.gz) file for reading or writing. The mode parameter
+#   is as in fopen ("rb" or "wb") but can also include a compression level
+#   ("wb9") or a strategy: 'f' for filtered data as in "wb6f", 'h' for
+#   Huffman only compression as in "wb1h", or 'R' for run-length encoding
+#   as in "wb1R". (See the description of deflateInit2 for more information
+#   about the strategy parameter.)
+
+            my $gz = Compress::Zlib::gzopen($fh, "rb");
+            $raw_report = "";
+            my $buffer;
+            while (my $bytesread = $gz->gzread($buffer)) {
+                $raw_report .= $buffer;
+            }
         } else {
             die "Could not find '$target' or '$target.gz'";
         }
-        local $/;
-        my $raw_report = <$fh>;
         $isHTML = $raw_report =~ /^</;
         if ($isHTML) {
             if ($raw_report =~ m{^<\?.+?<html.+?<head.+?<body.+?<pre[^>]*>(.+)</pre>.*</body>.*</html>}s) {
@@ -891,7 +890,6 @@ sub _get_cooked_report {
         } else {
             $report = $raw_report;
         }
-        close $fh;
     }
     if ($report =~ /\r\n/) {
         my @rlines = split /\r?\n/, $report;

@@ -1,3 +1,11 @@
+2011-12-13  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
+
+	* release 0.2.1
+
+	* Replace the use of zcat with Compress::Zlib
+
+	* Remove all remnants of dependencies on XML::LibXML
+
 2011-11-27  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.2.0

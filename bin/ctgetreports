@@ -183,8 +183,7 @@ C<http_cpantesters> uses LWP::UserAgent at static.cpantesters.org.
 C<http_cpantesters_gzip> also uses LWP::UserAgent at
 static.cpantesters.org but compresses the fetched result after fetching
 and decompresses cached results before mirroring. This option
-requires that the external programs C<gzip>,C<gunzip>, and C<zcat> are
-installed on the system.
+requires that C<Compress::Zlib> is installed.
 
 =item B<--vdistro=s>
 
