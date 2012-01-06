@@ -72,6 +72,31 @@ my $plan;
 
 {
     BEGIN {
+        $plan += 2;
+    }
+    my $id = 18981290;
+    my %Opt = (
+               'q' => ["meta:perl", "meta:from"],
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    $DB::single++;
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'prereq:Text::Ligature'}, '0.02', "report $id: prereq:Text::Ligature is 0.02";
+    is $extract->{'prereq:parent'}, '0', "report $id: prereq:parent is 0";
+}
+
+{
+    BEGIN {
         $plan += 1;
     }
     my %Opt = (

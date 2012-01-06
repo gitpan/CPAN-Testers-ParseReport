@@ -62,10 +62,10 @@
    "provides" : {
       "CPAN::Testers::ParseReport" : {
          "file" : "lib/CPAN/Testers/ParseReport.pm",
-         "version" : "v0.2.1"
+         "version" : "v0.2.2"
       }
    },
    "release_status" : "stable",
-   "version" : "v0.2.1",
+   "version" : "v0.2.2",
    "x_repository" : "git://repo.or.cz/cpan-testers-parsereport.git"
 }

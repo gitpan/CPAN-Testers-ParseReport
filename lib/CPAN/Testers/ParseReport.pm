@@ -26,7 +26,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.1');
+use version; our $VERSION = qv('0.2.2');
 
 =head1 SYNOPSIS
 
@@ -726,7 +726,7 @@ sub parse_report {
                         next LINE;
                     }
                     $extract{"mod:$module"} = $v;
-                    if ($needwant) {
+                    if (defined $needwant) {
                         $needwant =~ s/^\s+//;
                         $needwant =~ s/\s+$//;
                         $extract{"prereq:$module"} = $needwant;

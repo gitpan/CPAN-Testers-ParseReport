@@ -221,8 +221,6 @@ The following example analyses diagnostic output from Acme-Study-Perl:
 
 =head1 DESCRIPTION
 
-!!!!Alert: alpha quality software, subject to change without warning!!!!
-
 The intent is to get at both the summary at cpantesters and the
 individual reports and parse the reports and collect the data for
 further inspection.
