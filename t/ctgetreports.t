@@ -72,11 +72,11 @@ my $plan;
 
 {
     BEGIN {
-        $plan += 2;
+        $plan += 5;
     }
     my $id = 18981290;
     my %Opt = (
-               'q' => ["meta:perl", "meta:from"],
+               'q' => ["meta:perl", "meta:from", 'conf:libpth', 'conf:libs', 'conf:perllibs'],
                'local' => 1,
                'cachedir' => 't/var',
                'quiet' => 1,
@@ -84,7 +84,6 @@ my $plan;
                'report' => $id,
               );
     my $dumpvars = {};
-    $DB::single++;
     my $extract = CPAN::Testers::ParseReport::parse_report
           (
            "t/var/nntp-testers/$id",
@@ -93,6 +92,15 @@ my $plan;
           );
     is $extract->{'prereq:Text::Ligature'}, '0.02', "report $id: prereq:Text::Ligature is 0.02";
     is $extract->{'prereq:parent'}, '0', "report $id: prereq:parent is 0";
+    # ld='cc', ldflags ='-pthread -Wl,-E  -fstack-protector -L/usr/local/lib'
+    # libpth=/usr/lib /usr/local/lib
+    # libs=-lgdbm -lm -lcrypt
+    # perllibs=-lm -lcrypt
+    # libc=, so=so, useshrplib=false, libperl=libperl.a
+    # gnulibc_version=''
+    is $extract->{'conf:libpth'}, '/usr/lib /usr/local/lib', "report $id: libpth: /usr/lib /usr/local/lib";
+    is $extract->{'conf:libs'}, '-lgdbm -lm -lcrypt', "report $id: libs: -lgdbm -lm -lcrypt";
+    is $extract->{'conf:perllibs'}, '-lm -lcrypt', "report $id: perllibs: -lm -lcrypt";
 }
 
 {

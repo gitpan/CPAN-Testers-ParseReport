@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.112621'
+generated_by: 'ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -20,13 +20,12 @@ no_index:
 provides:
   CPAN::Testers::ParseReport:
     file: lib/CPAN/Testers/ParseReport.pm
-    version: v0.2.2
+    version: v0.2.3
 requires:
   CPAN::Meta::Converter: 2.110440
-  CPAN::Meta::YAML: 0.004
+  CPAN::Meta::YAML: 0.008
   Class::ISA: 0
   Compress::Zlib: 0
-  Config::Perl::V: 0
   DateTime: 0
   DateTime::Format::Strptime: 0
   File::Path: 1.08
@@ -39,12 +38,12 @@ requires:
   LWP::UserAgent: 0
   List::Util: 0
   MIME::QuotedPrint: 3.07
-  Parse::CPAN::Meta: 1.4401
+  Parse::CPAN::Meta: 1.4402
   Pod::Usage: 1.33
   Statistics::Regression: 0
   Test::More: 0
   Test::Pod: 0
   Time::Local: 1.11
-  version: 0.93
-version: v0.2.2
+  version: 0.96
+version: v0.2.3
 x_repository: git://repo.or.cz/cpan-testers-parsereport.git

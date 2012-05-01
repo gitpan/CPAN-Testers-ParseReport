@@ -60,7 +60,6 @@ for my $m (qw(
 my $prereq_pm =
     {
      'Compress::Zlib'              => 0,
-     'Config::Perl::V'             => 0,
      'DateTime::Format::Strptime'  => 0,
      'File::Path'                  => '1.08',
      'Getopt::Long'                => 0,

@@ -36,6 +36,7 @@ my $plan;
         push @reg, $1 if /^Regression '(.+)'/;
     }
     my $duration = time - $start;
+    @reg = sort @reg; # make it a bit less fragile
     is "@reg",
         "conf:archname+osvers conf:ldflags meta:output_from",
         "found the 'right' top 3 candidates in $duration seconds; (a very fragile test)";

@@ -4,7 +4,6 @@ use warnings;
 use strict;
 
 use Compress::Zlib ();
-use Config::Perl::V ();
 use DateTime::Format::Strptime;
 use File::Basename qw(basename);
 use File::Path qw(mkpath);
@@ -26,7 +25,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.2');
+use version; our $VERSION = qv('0.2.3');
 
 =head1 SYNOPSIS
 
@@ -604,7 +603,14 @@ sub parse_report {
                     $in_summary = 0;
                 }
             } else {
-                my(%kv) = /\G,?\s*([^=]+)=('[^']+?'|\S+)/gc;
+                my(%kv) = m!\G,?\s*([^=]+)= # left hand side and equal sign
+                            (
+                                [^',]+$     # libpth=/usr/lib /usr/local/lib
+                            |
+                                '[^']+?'    # cccdlflags='-DPIC -fPIC'
+                            |
+                                \S+         # useshrplib=false
+                            )!xgc;
                 while (my($k,$v) = each %kv) {
                     my $ck = "conf:$k";
                     $ck =~ s/\s+$//;
@@ -935,14 +941,19 @@ code for details.
     my %normalize_numeric =
         (
          id => sub { return shift },
-         'meta:date' => sub {
-             my $v = shift;
-             my($Y,$M,$D,$h,$m,$s) = $v =~ /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/;
-             unless (defined $M) {
-                 die "illegal value[$v] for a date";
-             }
-             Time::Local::timegm($s,$m,$h,$D,$M-1,$Y);
-         },
+
+         # here we were treating date as numeric; current
+         # implementation requires to decide for one normalization, so
+         # we decided 2012-02 for a sampling focussing on recentness;
+
+         #'meta:date' => sub {
+         #    my $v = shift;
+         #    my($Y,$M,$D,$h,$m,$s) = $v =~ /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/;
+         #    unless (defined $M) {
+         #        die "illegal value[$v] for a date";
+         #    }
+         #    Time::Local::timegm($s,$m,$h,$D,$M-1,$Y);
+         #},
         );
     my %normalize_value =
         (
@@ -951,6 +962,37 @@ code for details.
              my $perl = $perlatpatchlevel;
              $perl =~ s/\@.*//;
              $perl;
+         },
+         'meta:date' => sub {
+             my $v = shift;
+             my($Y,$M,$D,$h,$m,$s) = $v =~ /(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/;
+             unless (defined $M) {
+                 die "illegal value[$v] for a date";
+             }
+             my $epoch = Time::Local::timegm($s,$m,$h,$D,$M-1,$Y);
+             my $Y_epoch = time - 2*365.25*86400;
+             my $ret;
+             if ($epoch < $Y_epoch) {
+                 $ret = $Y;
+             } else {
+                 my @gmtime = gmtime $Y_epoch; $gmtime[5] += 1900;
+                 if ($Y == $gmtime[5]) {
+                     $ret = $Y;
+                 } else {
+                     my $M_epoch = time - 9*7*86400;
+                     if ($epoch < $M_epoch) {
+                         $ret = "$Y-$M";
+                     } else {
+                         my @gmtime = gmtime $M_epoch; $gmtime[5] += 1900; $gmtime[4]++;
+                         if ($Y == $gmtime[5] && $M == $gmtime[4]) {
+                             $ret = "$Y-$M";
+                         } else {
+                             $ret = "$Y-$M-$D";
+                         }
+                     }
+                 }
+             }
+             return $ret;
          },
         );
 sub solve {
