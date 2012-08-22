@@ -1,3 +1,10 @@
+2012-08-22  Andreas Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
+
+	* release 0.2.4
+
+	* bugfix: parsing of lines that nowadays have commas to separate
+	variables but that did not have commas with perl 5.8.9
+
 2012-05-01  Andreas J. Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.2.3

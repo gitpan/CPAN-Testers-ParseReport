@@ -8,6 +8,11 @@ use List::Util qw(sum);
 
 my $plan;
 
+sub reportedvariableis ($$$$) {
+    my($extract,$id,$var,$value) = @_;
+    is $extract->{$var}, $value, "report $id: $var is $value";
+}
+
 {
     BEGIN { $plan += 1 }
     open my $fh, "<", qq{t/var/nntp-testers/1581994} or die "could not open: $!";
@@ -90,17 +95,17 @@ my $plan;
            $dumpvars,
            %Opt,
           );
-    is $extract->{'prereq:Text::Ligature'}, '0.02', "report $id: prereq:Text::Ligature is 0.02";
-    is $extract->{'prereq:parent'}, '0', "report $id: prereq:parent is 0";
+    reportedvariableis $extract, $id, 'prereq:Text::Ligature', '0.02';
+    reportedvariableis $extract, $id, 'prereq:parent', '0';
     # ld='cc', ldflags ='-pthread -Wl,-E  -fstack-protector -L/usr/local/lib'
     # libpth=/usr/lib /usr/local/lib
     # libs=-lgdbm -lm -lcrypt
     # perllibs=-lm -lcrypt
     # libc=, so=so, useshrplib=false, libperl=libperl.a
     # gnulibc_version=''
-    is $extract->{'conf:libpth'}, '/usr/lib /usr/local/lib', "report $id: libpth: /usr/lib /usr/local/lib";
-    is $extract->{'conf:libs'}, '-lgdbm -lm -lcrypt', "report $id: libs: -lgdbm -lm -lcrypt";
-    is $extract->{'conf:perllibs'}, '-lm -lcrypt', "report $id: perllibs: -lm -lcrypt";
+    reportedvariableis $extract, $id, 'conf:libpth', '/usr/lib /usr/local/lib';
+    reportedvariableis $extract, $id, 'conf:libs', '-lgdbm -lm -lcrypt';
+    reportedvariableis $extract, $id, 'conf:perllibs', '-lm -lcrypt';
 }
 
 {
@@ -129,24 +134,25 @@ my $plan;
     BEGIN {
         $plan += 3;
     }
+    my $id = "3521214";
     my %Opt = (
                'q' => ["meta:perl", "meta:from", "conf:git_commit_id", "env:PERL5_MINISMOKEBOX"],
                'local' => 1,
                'cachedir' => 't/var',
                'quiet' => 1,
                'dumpvars' => ".",
-               'report' => '3521214',
+               'report' => $id,
               );
     my $dumpvars = {};
     my $extract = CPAN::Testers::ParseReport::parse_report
           (
-           "t/var/nntp-testers/3521214",
+           "t/var/nntp-testers/$id",
            $dumpvars,
            %Opt,
           );
-    is $extract->{'conf:git_commit_id'}, '245490700bb744b58c708516d2d3c08f18583dc3', "found git commit id";
-    is $extract->{'env:AUTOMATED_TESTING'}, '1', "automated testing was set";
-    is $extract->{'meta:date'}, '2009-03-20T03:29:23', "date in iso format";
+    reportedvariableis $extract, $id, 'conf:git_commit_id', '245490700bb744b58c708516d2d3c08f18583dc3';
+    reportedvariableis $extract, $id, 'env:AUTOMATED_TESTING', '1';
+    reportedvariableis $extract, $id, 'meta:date', '2009-03-20T03:29:23';
 }
 
 {
@@ -170,9 +176,9 @@ my $plan;
            %Opt,
           );
     like $extract->{'conf:archname'}, qr/64int/, "found 64int on archname";
-    is $extract->{'env:AUTOMATED_TESTING'}, '1', "automated testing was set";
-    is $extract->{'mod:Storable'}, '2.18', "Storable version";
-    is $extract->{'meta:date'}, '2009-05-10T01:39:11', "report $id: date";
+    reportedvariableis $extract, $id, 'env:AUTOMATED_TESTING', '1';
+    reportedvariableis $extract, $id, 'mod:Storable', '2.18';
+    reportedvariableis $extract, $id, 'meta:date', '2009-05-10T01:39:11';
 }
 
 {
@@ -195,10 +201,10 @@ my $plan;
            $dumpvars,
            %Opt,
           );
-    is $extract->{'conf:nvsize'}, 16, "found 16 on nvsize";
-    is $extract->{'conf:uselongdouble'}, 'define', "found uselongdouble";
-    is $extract->{'mod:ExtUtils::MakeMaker'}, '6.55_02', "makemaker version";
-    is $extract->{'meta:date'}, '2009-10-21T17:30:27', "report $id: date";
+    reportedvariableis $extract, $id, 'conf:nvsize', 16;
+    reportedvariableis $extract, $id, 'conf:uselongdouble', 'define';
+    reportedvariableis $extract, $id, 'mod:ExtUtils::MakeMaker', '6.55_02';
+    reportedvariableis $extract, $id, 'meta:date', '2009-10-21T17:30:27';
 }
 
 {
@@ -221,10 +227,10 @@ my $plan;
            $dumpvars,
            %Opt,
           );
-    is $extract->{'conf:nvsize'}, 8, "found 8 on nvsize";
-    is $extract->{'conf:uselongdouble'}, 'undef', "found uselongdouble";
-    is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "makemaker version";
-    is $extract->{'meta:date'}, '2009-08-14T20:18:57', "report $id: date";
+    reportedvariableis $extract, $id, 'conf:nvsize', 8;
+    reportedvariableis $extract, $id, 'conf:uselongdouble', 'undef';
+    reportedvariableis $extract, $id, 'mod:ExtUtils::MakeMaker', '6.54';
+    reportedvariableis $extract, $id, 'meta:date', '2009-08-14T20:18:57';
 }
 
 {
@@ -349,15 +355,15 @@ my $plan;
            $dumpvars,
            %Opt,
           );
+    is $extract->{'meta:date'}, '2009-11-01T14:07:11', "report $id: date";
     is $extract->{'conf:nvsize'}, 8, "report $id: found 8 on nvsize";
     is $extract->{'conf:uselongdouble'}, 'undef', "report $id: found uselongdouble";
-    is $extract->{'mod:l module toolchain versions in'}, undef, "report $id: C:T:PR 0.1.6 had a bug against cpanplus 0.89_06";
     is $extract->{'mod:CPANPLUS'}, '0.89_06', "report $id: CPANPLUS version";
     is $extract->{'mod:Cwd'}, '3.2501', "report $id: Cwd version";
     is $extract->{'mod:File::Spec'}, '3.2501', "report $id: File::Spec version";
     is $extract->{'mod:version'}, '0.7701', "report $id: version version";
     is $extract->{'mod:ExtUtils::MakeMaker'}, '6.54', "report $id: ExtUtils::MakeMaker version";
-    is $extract->{'meta:date'}, '2009-11-01T14:07:11', "report $id: date";
+    is $extract->{'mod:l module toolchain versions in'}, undef, "report $id: C:T:PR 0.1.6 had a bug against cpanplus 0.89_06";
 }
 
 {
@@ -615,6 +621,35 @@ my $plan;
           );
     is $extract->{'meta:perl'}, q{5.12.4}, "report $id: meta:perl";
     is $extract->{'mod:CPANPLUS'}, q{0.9111}, "report $id: mod:CPANPLUS";
+}
+
+{
+    BEGIN {
+        $plan += 7;
+    }
+    my $id = 18548512;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    $main::att=1;
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    reportedvariableis $extract, $id, 'conf:usesocks', 'undef';
+    reportedvariableis $extract, $id, 'conf:use64bitall', 'define';
+    reportedvariableis $extract, $id, 'conf:use64bitint', 'define';
+    reportedvariableis $extract, $id, 'conf:useposix', 'true';
+    reportedvariableis $extract, $id, 'conf:usemymalloc', 'n';
+    reportedvariableis $extract, $id, 'conf:d_sfio', 'undef';
+    reportedvariableis $extract, $id, 'conf:bincompat5005', 'undef';
 }
 
 unlink "ctgetreports.out";

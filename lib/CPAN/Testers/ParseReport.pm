@@ -25,7 +25,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.3');
+use version; our $VERSION = qv('0.2.4');
 
 =head1 SYNOPSIS
 
@@ -605,6 +605,9 @@ sub parse_report {
             } else {
                 my(%kv) = m!\G,?\s*([^=]+)= # left hand side and equal sign
                             (
+                                [^',\s]+(?=.+=) # use64bitint=define use64bitall=define uselongdouble=undef
+                                                # (lookahead needed for left-over equal sign)
+                            |
                                 [^',]+$     # libpth=/usr/lib /usr/local/lib
                             |
                                 '[^']+?'    # cccdlflags='-DPIC -fPIC'
