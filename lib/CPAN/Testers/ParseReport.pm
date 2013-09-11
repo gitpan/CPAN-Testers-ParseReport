@@ -25,7 +25,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.4');
+use version; our $VERSION = qv('0.2.5');
 
 =head1 SYNOPSIS
 
@@ -60,7 +60,7 @@ options would require different ones.
 
 mirrors and reads this report. $report is of the form
 
-  { id => number }
+  { id => <integer>, guid => <guid>, }
 
 $dumpvar is a hashreference that gets filled with data.
 
@@ -188,7 +188,10 @@ sub _parse_yaml {
     my @all;
     for my $test (@$arr) {
         my $id = $test->{id};
-        push @all, {id=>$id};
+        push @all, {
+                    id   => $test->{id},
+                    guid => $test->{guid},
+                   };
         return if $Signal;
     }
     @all = sort { $b->{id} <=> $a->{id} } @all;
@@ -198,6 +201,7 @@ sub _parse_yaml {
 sub parse_single_report {
     my($report, $dumpvars, %Opt) = @_;
     my($id) = $report->{id};
+    my($guid) = $report->{guid};
     $Opt{cachedir} ||= "$ENV{HOME}/var/cpantesters";
     # the name nntp-testers was picked because originally the reports
     # were available from an NNTP server
@@ -209,9 +213,29 @@ sub parse_single_report {
             die {severity=>0,text=>"Warning: No local file '$target' found, skipping\n"};
         }
     } else {
+        $Opt{transport} ||= $default_transport;
+        if (-e $target) {
+            my $raw_report;
+            if (0) {
+            } elsif ($Opt{transport} eq "http_cpantesters") {
+                open my $fh, $target or die "Could not open '$target': $!";
+                local $/;
+                $raw_report = <$fh>;
+            } elsif ($Opt{transport} eq "http_cpantesters_gzip") {
+                open my $fh, $target or die "Could not open '$target': $!";
+                my $gz = Compress::Zlib::gzopen($fh, "rb");
+                $raw_report = "";
+                my $buffer;
+                while (my $bytesread = $gz->gzread($buffer)) {
+                    $raw_report .= $buffer;
+                }
+            }
+            if ($raw_report =~ m{<title>.*(Report not found|Error).*</title>}) {
+                unlink $target or die "Could not unlink '$target': $!";
+            }
+        }
         if (! -e $target) {
             print STDERR "Fetching $target..." if $Opt{verbose} && !$Opt{quiet};
-            $Opt{transport} ||= $default_transport;
             if (0) {
             } elsif ($Opt{transport} eq "http_cpantesters") {
                 my $mustfetch = 0;
@@ -223,7 +247,7 @@ sub parse_single_report {
                     $mustfetch = 1;
                 }
                 if ($mustfetch) {
-                    my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1",$target);
+                    my $resp = _ua->mirror("http://www.cpantesters.org/cpan/report/$guid?raw=1",$target);
                     if ($resp->is_success) {
                         if ($Opt{verbose}) {
                             my(@stat) = stat $target;
@@ -238,7 +262,7 @@ sub parse_single_report {
                         print $fh $resp->headers->as_string;
                     } else {
                         die {severity=>0,
-                                 text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                                 text=>sprintf "HTTP Server Error[%s] for id[%s] guid[%s]", $resp->status_line, $id, $guid};
                     }
                 }
             } elsif ($Opt{transport} eq "http_cpantesters_gzip") {
@@ -251,7 +275,7 @@ sub parse_single_report {
                     $mustfetch = 1;
                 }
                 if ($mustfetch) {
-                    my $resp = _ua_gzip->mirror("http://www.cpantesters.org/cpan/report/$id?raw=1","$target.gz");
+                    my $resp = _ua_gzip->mirror("http://www.cpantesters.org/cpan/report/$guid?raw=1","$target.gz");
                     if ($resp->is_success) {
                         if ($Opt{verbose}) {
                             my(@stat) = stat "$target.gz";
@@ -266,7 +290,7 @@ sub parse_single_report {
                         print $fh $resp->headers->as_string;
                     } else {
                         die {severity=>0,
-                                 text=>sprintf "HTTP Server Error[%s] for id[%s]", $resp->status_line, $id};
+                                 text=>sprintf "HTTP Server Error[%s] for id[%s] guid[%s]", $resp->status_line, $id, $guid};
                     }
                 }
             } else {
@@ -311,12 +335,14 @@ sub parse_distro {
         my $d = CPAN::DistnameInfo->new("FOO/$Opt{vdistro}.tgz");
         my $dist = $d->dist;
         my $version = $d->version;
-        my $sql = "select id from cpanstats where dist=? and version=? order by id desc";
+        my $sql = "select id, guid from cpanstats where dist=? and version=? order by id desc";
         my @rows = $dbi->get_query($sql,$dist,$version);
         my @all;
         for my $row (@rows) {
-            my $id = $row->[0];
-            push @all, {id=>$id};
+            push @all, {
+                        id   => $row->[0],
+                        guid => $row->[1],
+                       };
         }
         $reports = \@all;
     } else {
@@ -1225,7 +1251,7 @@ Thanks to RJBS for module-starter.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008 Andreas König.
+Copyright 2008,2009,2010,2011,2012,2013 Andreas König.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

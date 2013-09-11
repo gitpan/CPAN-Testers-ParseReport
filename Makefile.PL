@@ -114,7 +114,7 @@ eval { WriteMakefile
      ($ExtUtils::MakeMaker::VERSION >= 6.4502 ?
       (META_ADD => {
                     # write: git push git+ssh://repo.or.cz/srv/git/cpan-testers-parsereport.git master
-                    repository => "git://repo.or.cz/cpan-testers-parsereport.git",
+                    resources => { repository => "git://repo.or.cz/cpan-testers-parsereport.git" },
                     provides => { "CPAN::Testers::ParseReport" => { version => $mmgenereatedversionfrom, file => $::version_from }},
                    }) : ()),
      @sign,

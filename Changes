@@ -1,3 +1,13 @@
+2013-09-11  k  <k@k83.linux.bogus>
+
+	* release 0.2.5
+
+	* switch download URLs for reports to guid, they seem to have a greater
+	chance to succeed than the numeric ids
+
+	* address #86898: fix META_ADD syntax to inject repository into META.yml
+	(thanks to Karen Etheridge)
+
 2012-08-22  Andreas Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.2.4
