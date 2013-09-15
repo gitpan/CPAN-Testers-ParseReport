@@ -25,7 +25,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.5');
+use version; our $VERSION = qv('0.2.6');
 
 =head1 SYNOPSIS
 
@@ -214,15 +214,20 @@ sub parse_single_report {
         }
     } else {
         $Opt{transport} ||= $default_transport;
+        my $ttarget;
         if (-e $target) {
+            $ttarget = $target;
+        } elsif (-e "$target.gz") {
+            $ttarget = "$target.gz";
+        }
+        if ($ttarget) {
             my $raw_report;
+            open my $fh, $ttarget or die "Could not open '$ttarget': $!";
             if (0) {
             } elsif ($Opt{transport} eq "http_cpantesters") {
-                open my $fh, $target or die "Could not open '$target': $!";
                 local $/;
                 $raw_report = <$fh>;
             } elsif ($Opt{transport} eq "http_cpantesters_gzip") {
-                open my $fh, $target or die "Could not open '$target': $!";
                 my $gz = Compress::Zlib::gzopen($fh, "rb");
                 $raw_report = "";
                 my $buffer;
@@ -231,7 +236,7 @@ sub parse_single_report {
                 }
             }
             if ($raw_report =~ m{<title>.*(Report not found|Error).*</title>}) {
-                unlink $target or die "Could not unlink '$target': $!";
+                unlink $ttarget or die "Could not unlink '$ttarget': $!";
             }
         }
         if (! -e $target) {

@@ -1,4 +1,10 @@
-2013-09-11  k  <k@k83.linux.bogus>
+2013-09-15  Andreas Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
+
+	* release 0.2.6
+
+	* fix handling of cached gzipped results
+
+2013-09-11  Andreas Koenig  <andreas.koenig.7os6VVqR@franz.ak.mind.de>
 
 	* release 0.2.5
 
