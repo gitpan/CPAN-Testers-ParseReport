@@ -10,8 +10,10 @@ use File::Path qw(mkpath);
 use HTML::Entities qw(decode_entities);
 use LWP::UserAgent;
 use List::Util qw(max min sum);
+use List::MoreUtils qw(uniq);
 use MIME::QuotedPrint ();
 use Time::Local ();
+use utf8;
 
 our $default_transport = "http_cpantesters";
 our $default_cturl = "http://static.cpantesters.org/distro";
@@ -25,7 +27,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.6');
+use version; our $VERSION = qv('0.2.7');
 
 =head1 SYNOPSIS
 
@@ -691,6 +693,10 @@ sub parse_report {
                     my($uid,$euid) = split m{\s*/\s*}, $right;
                     $extract{'env:$UID'} = $uid;
                     $extract{'env:$EUID'} = $euid;
+                } elsif ($left =~ /GID/) {
+                    for my $xgid (uniq split " ", $right) {
+                        $extract{"env:$left∋$xgid"} = "true";
+                    }
                 } else {
                     $extract{"env:$left"} = $right;
                 }
@@ -965,8 +971,6 @@ code for details.
          "env:PERL5LIB",
          "env:PERL5OPT",
          'env:$^X',
-         'env:$EGID',
-         'env:$GID',
          'env:PERL5_CPANPLUS_IS_RUNNING',
          'env:PERL5_CPAN_IS_RUNNING',
          'env:PERL5_CPAN_IS_RUNNING_IN_RECURSION',

@@ -159,7 +159,7 @@ setversion:
 
 verify-changes-date:
 	@$(PERL) -ne 'BEGIN{my@t=(localtime)[5,4,3];$$t[0]+=1900;$$t[1]++;$$t=sprintf"%04d-%02d-%02d",@t}' \
-		-e '$$ok++,exit if /^$$t\s/; END{die "Alert: did not find <$$t> in Changes file" unless $$ok}' Changes
+		-e '$$ok++,exit if /^[\d\.]+\s+$$t\s/ && $$.<12; END{die "Alert: did not find <$$t> in the first 12 lines of the Changes file" unless $$ok}' Changes
 
 verify-no-subdir:
 	@$(PERL) -e 'my$$s=join",",grep{!/^($(OKDIRS))\z/x&&-d($$_)}glob"*";' \

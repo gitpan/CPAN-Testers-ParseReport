@@ -5,6 +5,9 @@ use Test::More;
 use File::Spec;
 use CPAN::Testers::ParseReport;
 use List::Util qw(sum);
+use utf8;
+  binmode Test::More->builder->output, ":utf8";
+  binmode Test::More->builder->failure_output, ":utf8";
 
 my $plan;
 
@@ -527,7 +530,7 @@ sub reportedvariableis ($$$$) {
            %Opt,
           );
     is $extract->{'env:$UID'}, q{1005}, "report $id: UID=1005";
-    is $extract->{'env:$GID'}, q{1005 1005}, "report $id: GID=1005 1005";
+    is $extract->{'env:$GID∋1005'}, q{true}, "report $id: GID∋1005";
 }
 
 {
@@ -550,7 +553,7 @@ sub reportedvariableis ($$$$) {
            %Opt,
           );
     is $extract->{'env:$UID'}, q{1002}, "report $id: UID=1002";
-    is $extract->{'env:$GID'}, q{100 100}, "report $id: GID=100 100";
+    is $extract->{'env:$GID∋100'}, q{true}, "report $id: GID∋100";
 }
 
 {
@@ -573,7 +576,7 @@ sub reportedvariableis ($$$$) {
            %Opt,
           );
     is $extract->{'env:$UID'}, q{502}, "report $id: UID=502";
-    is $extract->{'env:$GID'}, q{502 502}, "report $id: GID=502 502";
+    is $extract->{'env:$GID∋502'}, q{true}, "report $id: GID∋502";
 }
 
 {
@@ -596,7 +599,7 @@ sub reportedvariableis ($$$$) {
            %Opt,
           );
     is $extract->{'env:$UID'}, q{1001}, "report $id: UID=1001";
-    is $extract->{'env:$GID'}, q{1001 1001 1001}, "report $id: GID=1001 1001 1001";
+    is $extract->{'env:$GID∋1001'}, q{true}, "report $id: GID∋1001";
     is $extract->{'env:$^X'}, q{/usr/home/cpan/pit/bare/perl-5.10.0/bin/perl}, "report $id: \$^X=/usr/home/cpan/pit/bare/perl-5.10.0/bin/perl";
 }
 
