@@ -4,7 +4,7 @@ use strict;
 use Test::More;
 use File::Spec;
 use CPAN::Testers::ParseReport;
-use List::Util qw(sum);
+use List::Util qw(sum max);
 use utf8;
   binmode Test::More->builder->output, ":utf8";
   binmode Test::More->builder->failure_output, ":utf8";
@@ -58,15 +58,16 @@ sub reportedvariableis ($$$$) {
 
 {
     BEGIN {
-        $plan += 1;
+        $plan += 2;
     }
+    my $sample_0 = 40;
     my %Opt = (
                'q' => ["meta:perl", "meta:from", "prereq:Test::More"],
                'local' => 1,
                'cachedir' => 't/var',
                'quiet' => 1,
                'dumpvars' => ".",
-               'sample' => 99,
+               'sample' => $sample_0,
               );
     CPAN::Testers::ParseReport::parse_distro
           (
@@ -74,8 +75,23 @@ sub reportedvariableis ($$$$) {
            %Opt,
           );
     my $Y = CPAN::Testers::ParseReport::_yaml_loadfile("ctgetreports.out");
-    my $count = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
-    is($count, 99, "found $count==99 reports via meta:from");
+    unlink "ctgetreports.out" or die "Could not unlink ctgetreports.out: $!";
+    my $count_all = sum map {values %{$Y->{"meta:from"}{$_}}} keys %{$Y->{"meta:from"}};
+    is($count_all, $sample_0, "found $count_all==$sample_0 reports via meta:from");
+    my $count_fail_1 = $Y->{"meta:ok"}{"FAIL"}{"FAIL"};
+
+    # if the first pass brings much, we still want one more, if it
+    # brings just a few, we want at least 22 since we know we have
+    # more than that
+    $Opt{minfail} = max(22,$count_fail_1+1);
+    CPAN::Testers::ParseReport::parse_distro
+          (
+           "Scriptalicious",
+           %Opt,
+          );
+    $Y = CPAN::Testers::ParseReport::_yaml_loadfile("ctgetreports.out");
+    my $count_fail_2 = $Y->{"meta:ok"}{"FAIL"}{"FAIL"};
+    cmp_ok($count_fail_2, '>', $count_fail_1, "found $count_fail_2 > $count_fail_1: that is more fails with minfail than without");
 }
 
 {
@@ -240,10 +256,13 @@ sub reportedvariableis ($$$$) {
     BEGIN { $plan += 1 }
     open my $fh, "-|", qq{"$^X" "-Ilib" "bin/ctgetreports" "--local" "--cachedir" "t/var" "--solve" "--quiet" "Scriptalicious" 2>&1} or die "could not fork: $!";
     my @reg;
+    my @full;
     while (<$fh>) {
         push @reg, $1 if /^Regression '(.+)'/;
+        push @full, $_;
     }
-    is "@reg", "meta:writer mod:Test::Harness id", "found the top 3 candidates";
+    close $fh or diag join "", @full;
+    is "@reg", "meta:arch+perl fail:t/04-fork meta:writer", "found the top 3 candidates";
 
 # Up to 0.0.15:
 
@@ -424,6 +443,28 @@ sub reportedvariableis ($$$$) {
     BEGIN {
         $plan += 1;
     }
+    my $id = 34604012;
+    my %Opt = (
+               'local' => 1,
+               'cachedir' => 't/var',
+               'quiet' => 1,
+               'dumpvars' => ".",
+               'report' => $id,
+              );
+    my $dumpvars = {};
+    my $extract = CPAN::Testers::ParseReport::parse_report
+          (
+           "t/var/nntp-testers/$id",
+           $dumpvars,
+           %Opt,
+          );
+    is $extract->{'fail:t/20-content-types.t'}, 1;
+}
+
+{
+    BEGIN {
+        $plan += 2;
+    }
     my $id = 6422067;
     my %Opt = (
                'local' => 1,
@@ -441,6 +482,7 @@ sub reportedvariableis ($$$$) {
            %Opt,
           );
     is $extract->{'qr:(Failed test\s+\S+.*)'}, q{Failed test 'Pod coverage on App::Pm2Port'}, "report $id: qr...Failed test...";
+    is $extract->{'fail:t/pod-coverage.t'}, 1;
 }
 
 {

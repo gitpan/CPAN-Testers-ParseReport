@@ -12,8 +12,8 @@ ctgetreports - Quickly fetch cpantesters results with all reports
 
 =head1 OPTIONS
 
-A distroname is either unversioned as in C<IPC-Run> or versioned as in
-C<IPC-Run-0.80>.
+A distroname is unversioned, e.g. C<IPC-Run>. For versioned names as
+in C<IPC-Run-0.80> see --vdistro.
 
 =over 2
 
@@ -78,6 +78,25 @@ After every parsed report asks if you want to see it in a pager.
 
 Do not mirror, use a local *.yaml file. Dies if the YAML file
 is missing, skips missing report files.
+
+=item B<--minfail=i>
+
+Same thing as --minpass but for fail reports.
+
+Default value is the value of --minpass; if this is missing, no
+default applies.
+
+=item B<--minpass=i>
+
+If --sample is set, then it could happen that randomness strikes
+unluckily and the sample ends without a pass report. For the --solve
+option this would then have the consequence that it cannot succeed. By
+setting a minpass, the sample size is iteratively increased by small
+steps until the number of passes is equal to this option or higher.
+
+No default.
+
+If --sample is not set, --minpass and --minfail are ignored.
 
 =item B<--pager=s>
 
@@ -149,6 +168,8 @@ total number of reports is larger than specified then the number of
 reports will be sampled randomly to the demanded sample size. Useful
 to limit the computing power needed for a result.
 
+See also --minpass and --minfail.
+
 =item B<--solve!>
 
 Calls the solve function which tries to identify the best contenders
@@ -191,8 +212,24 @@ Versioned distro, e.g.
 
   IPC-Run-0.80
 
-Usually not needed because a versioned distro name can be specified as
-normal commandline argument.
+or
+
+  Moose-2.1103-TRIAL
+
+This is the way to target a version different from the most recent
+one.
+
+In the case that the command line argument already contains an easy to
+recognize version as in C<IPC-Run-0.80>, that argument is split and
+
+  ctgetreports Foo-Bar-3.14
+
+is equivalent to
+
+  ctgetreports --vdistro=Foo-Bar-3.14 Foo-Bar
+
+Note, that there may be distributions on CPAN where the trivial
+splitting implemented in ctgetreports does not work.
 
 =item B<--verbose|v+>
 
@@ -368,6 +405,11 @@ if ($Opt{"parse-common-errors"}) {
     for my $line (split /\n/, $para) {
         my($qr) = $line =~ /-q (qr:.*)/;
         push @{$Opt{q}}, $qr;
+    }
+}
+if (defined $Opt{minpass}) {
+    if (! defined $Opt{minfail}) {
+        $Opt{minfail} = $Opt{minpass};
     }
 }
 

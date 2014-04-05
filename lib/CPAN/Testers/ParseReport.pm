@@ -27,7 +27,7 @@ CPAN::Testers::ParseReport - parse reports to www.cpantesters.org from various s
 
 =cut
 
-use version; our $VERSION = qv('0.2.7');
+use version; our $VERSION = qv('0.2.9');
 
 =head1 SYNOPSIS
 
@@ -358,33 +358,52 @@ sub parse_distro {
     }
     return unless $reports;
     my $sampled = 0;
-    my $i = 0;
     my $samplesize = $Opt{sample} || 0;
     $samplesize = 0 if $samplesize && $samplesize >= @$reports;
- REPORT: for my $report (@$reports) {
-        $i++;
-        if ($samplesize) {
-            my $need = $samplesize - $sampled;
-            next REPORT unless $need;
-            my $left = @$reports - $i;
-            # warn sprintf "tot %d i %d sampled %d need %d left %d\n", scalar @$reports, $i, $sampled, $need, $left;
-            my $want_this = (rand(1) <= ($need/$left));
-            next REPORT unless $want_this;
-        }
-        eval {parse_single_report($report, \%dumpvars, %Opt)};
-        if ($@) {
-            if (ref $@) {
-                if ($@->{severity}) {
-                    die $@->{text};
+ REPEATER: {
+        my $i = 0;
+        my %taken;
+    REPORT: for my $report (@$reports) {
+            $i++;
+            if ($samplesize) {
+                my $need = $samplesize - $sampled;
+                next REPORT unless $need;
+                my $left = @$reports - $i;
+                # warn sprintf "tot %d i %d sampled %d need %d left %d\n", scalar @$reports, $i, $sampled, $need, $left;
+                my $want_this = (rand(1) <= ($need/$left));
+                next REPORT unless $want_this;
+            }
+            eval {parse_single_report($report, \%dumpvars, %Opt)};
+            if ($@) {
+                if (ref $@) {
+                    if ($@->{severity}) {
+                        die $@->{text};
+                    } else {
+                        warn $@->{text};
+                    }
                 } else {
-                    warn $@->{text};
+                    die $@;
                 }
-            } else {
-                die $@;
+            }
+            $sampled++;
+            $taken{$i-1}=undef;
+            last REPEATER if $Signal;
+        }
+        if ($samplesize) {
+        PASSFAIL: for my $pf ("pass","fail") {
+                my $minx = $Opt{"min".$pf} or next PASSFAIL;
+                my $x = $dumpvars{"meta:ok"}{uc $pf}{uc $pf};
+                if ($x < $minx) {
+                    # bump samplesize, remove already sampled reports from array, redo
+                    my $bump = int($samplesize * 0.05)+1;
+                    $samplesize += $bump;
+                    for my $k (sort {$b <=> $a} keys %taken) {
+                        splice @$reports, $k, 1;
+                    }
+                    redo REPEATER;
+                }
             }
         }
-        $sampled++;
-        last if $Signal;
     }
     if ($Opt{dumpvars}) {
         my $dumpfile = $Opt{dumpfile} || "ctgetreports.out";
@@ -483,6 +502,7 @@ sub parse_report {
     my $in_summary_seen_platform = 0;
     my $in_prg_output = 0;
     my $in_env_context = 0;
+    my $in_test_summary = 0;
 
     my $current_headline;
     my @previous_line = ""; # so we can neutralize line breaks
@@ -512,17 +532,22 @@ sub parse_report {
             $followupline =~ s/^\s+//; # remo leading space
             $_ .= $followupline;
         }
-        if (/^--------/ && $previous_line[-2] && $previous_line[-2] =~ /^--------/) {
-            $current_headline = $previous_line[-1];
-            if ($current_headline =~ /PROGRAM OUTPUT/) {
-                $in_prg_output = 1;
-            } else {
+        if (/^--------/) {
+            if ($previous_line[-2] && $previous_line[-2] =~ /^--------/) {
+                $current_headline = $previous_line[-1];
+                if ($current_headline =~ /PROGRAM OUTPUT/) {
+                    $in_prg_output = 1;
+                } else {
+                    $in_prg_output = 0;
+                }
+                if ($current_headline =~ /ENVIRONMENT AND OTHER CONTEXT/) {
+                    $in_env_context = 1;
+                } else {
+                    $in_env_context = 0;
+                }
+            } elsif ($previous_line[-1] && $previous_line[-1] =~ /Test Summary Report/) {
+                $in_test_summary = 1;
                 $in_prg_output = 0;
-            }
-            if ($current_headline =~ /ENVIRONMENT AND OTHER CONTEXT/) {
-                $in_env_context = 1;
-            } else {
-                $in_env_context = 0;
             }
         }
         if ($extract{"meta:perl"}) {
@@ -702,6 +727,17 @@ sub parse_report {
                 }
             }
         }
+        if ($in_test_summary) {
+            if (/^(?:Result:|Files=\d)/) {
+                $in_test_summary = 0;
+            } elsif (/^(\S+)\s+\(Wstat:.+?Tests:.+?Failed:\s*(\d+)\)$/) {
+                my $in_test_summary_current_test = $1;
+                my $in_test_summary_current_failed = $2;
+                $extract{"fail:$in_test_summary_current_test"} = $in_test_summary_current_failed;
+            } elsif (/^\s+Failed tests?:/) {
+                # ignoring the exact combination of tests for now, seems like overkill
+            }
+        }
         push @previous_line, $_;
         if ($expect_prereq || $expect_toolchain) {
             if (/Perl module toolchain versions installed/) {
@@ -834,6 +870,9 @@ sub parse_report {
     if ($Opt{solve}) {
         if ($extract{"conf:osvers"} && $extract{"conf:archname"}) {
             $extract{"conf:archname+osvers"} = join " ", @extract{"conf:archname","conf:osvers"};
+        }
+        if ($extract{"meta:perl"} && $extract{"conf:archname"}) {
+            $extract{"meta:arch+perl"} = join " ", @extract{"conf:archname","meta:perl"};
         }
         my $data = $dumpvars->{"==DATA=="} ||= [];
         push @$data, \%extract;

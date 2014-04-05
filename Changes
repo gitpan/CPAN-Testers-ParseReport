@@ -1,3 +1,19 @@
+0.2.9 2014-04-05  k  <andk@cpan.org>
+
+	* new composed variable meta:arch+perl made from conf:archname and
+	meta:perl (suggested by Christian Walde)
+
+0.2.8-tobe 2013-12-12  k  <andk@cpan.org>
+
+	* new options --minpass and --minfail
+
+	* pod clarification for the --vdistro option
+
+	* parse the names of the failing tests and include them in the
+	regressions
+
+	* improve diagnostics on subprocess errors
+
 0.2.7 2013-09-24  k  <andk@cpan.org>
 
 	* finish and activate GID and EGID calculations (thanks to Christian
